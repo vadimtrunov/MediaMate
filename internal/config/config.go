@@ -81,8 +81,8 @@ type JellyfinConfig struct {
 
 // TelegramConfig holds Telegram bot configuration
 type TelegramConfig struct {
-	BotToken       string   `yaml:"bot_token"`
-	AllowedUserIDs []int64  `yaml:"allowed_user_ids,omitempty"`
+	BotToken       string  `yaml:"bot_token"`
+	AllowedUserIDs []int64 `yaml:"allowed_user_ids,omitempty"`
 }
 
 // TMDbConfig holds TMDb API configuration

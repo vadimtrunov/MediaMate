@@ -25,7 +25,7 @@ func SetupLogger(level string) *slog.Logger {
 	}
 
 	opts := &slog.HandlerOptions{
-		Level: logLevel,
+		Level:     logLevel,
 		AddSource: logLevel == slog.LevelDebug, // Add source file/line in debug mode
 	}
 

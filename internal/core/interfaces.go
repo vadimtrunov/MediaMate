@@ -82,8 +82,8 @@ type Frontend interface {
 
 // Message represents a chat message
 type Message struct {
-	Role    string      // "user", "assistant", "system"
-	Content string      // The message content
+	Role      string     // "user", "assistant", "system"
+	Content   string     // The message content
 	ToolCalls []ToolCall // Tool calls made by the assistant
 }
 
@@ -96,8 +96,8 @@ type Tool struct {
 
 // ToolCall represents a tool invocation
 type ToolCall struct {
-	ID       string                 // Unique call ID
-	Name     string                 // Tool name
+	ID        string                 // Unique call ID
+	Name      string                 // Tool name
 	Arguments map[string]interface{} // Tool arguments
 }
 
@@ -122,23 +122,23 @@ type MediaItem struct {
 
 // MediaStatus represents the status of a media item in the backend
 type MediaStatus struct {
-	ItemID       string  // Media item ID
-	Status       string  // "wanted", "downloading", "downloaded", "available"
-	Progress     float64 // Download progress (0-100)
-	ETA          string  // Estimated time of arrival
-	QualityProfile string // Quality profile name
+	ItemID         string  // Media item ID
+	Status         string  // "wanted", "downloading", "downloaded", "available"
+	Progress       float64 // Download progress (0-100)
+	ETA            string  // Estimated time of arrival
+	QualityProfile string  // Quality profile name
 }
 
 // Torrent represents a torrent download
 type Torrent struct {
-	Hash     string  // Torrent hash
-	Name     string  // Torrent name
-	Size     int64   // Total size in bytes
-	Progress float64 // Progress percentage (0-100)
-	Status   string  // "downloading", "seeding", "paused", "error"
-	DownloadSpeed int64 // Download speed in bytes/sec
-	UploadSpeed   int64 // Upload speed in bytes/sec
-	ETA      int64   // Estimated time remaining in seconds
+	Hash          string  // Torrent hash
+	Name          string  // Torrent name
+	Size          int64   // Total size in bytes
+	Progress      float64 // Progress percentage (0-100)
+	Status        string  // "downloading", "seeding", "paused", "error"
+	DownloadSpeed int64   // Download speed in bytes/sec
+	UploadSpeed   int64   // Upload speed in bytes/sec
+	ETA           int64   // Estimated time remaining in seconds
 }
 
 // TorrentProgress represents detailed progress information

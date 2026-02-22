@@ -169,10 +169,7 @@ run-dev: ## Run in development mode with hot reload
 # Git hooks
 .PHONY: install-hooks
 install-hooks: ## Install git hooks
-	@echo "Installing git hooks..."
-	@cp -f scripts/pre-commit.sh .git/hooks/pre-commit
-	@chmod +x .git/hooks/pre-commit
-	@echo "✅ Git hooks installed!"
+	@bash scripts/install-hooks.sh
 
 # Documentation
 .PHONY: docs

@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+        uses: securego/gosec@v2.22.4
         with:
           # G304: File path from user input - validated by validateConfigPath before use
           # G117: Deprecated TLS check - false positive in standard library usage

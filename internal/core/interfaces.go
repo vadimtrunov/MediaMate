@@ -82,9 +82,11 @@ type Frontend interface {
 
 // Message represents a chat message
 type Message struct {
-	Role      string     // "user", "assistant", "system"
-	Content   string     // The message content
-	ToolCalls []ToolCall // Tool calls made by the assistant
+	Role         string     // "user", "assistant", "system"
+	Content      string     // The message content
+	ToolCalls    []ToolCall // Tool calls made by the assistant
+	ToolResultID string     // If non-empty, this message is a tool result for this call ID
+	IsError      bool       // Whether the tool result indicates an error
 }
 
 // Tool represents a tool that can be called by the LLM

@@ -25,23 +25,31 @@ func newCache(ttl time.Duration) *cache {
 }
 
 func (c *cache) Get(key string) (any, bool) {
+	now := time.Now()
 	c.mu.RLock()
 	entry, ok := c.entries[key]
+	if ok && !now.After(entry.expiresAt) {
+		c.mu.RUnlock()
+		return entry.data, true
+	}
 	c.mu.RUnlock()
 
-	if !ok || time.Now().After(entry.expiresAt) {
-		if ok {
-			// Expired — remove lazily
-			c.mu.Lock()
-			// Re-check under write lock to avoid deleting a fresh entry
-			if e, exists := c.entries[key]; exists && time.Now().After(e.expiresAt) {
-				delete(c.entries, key)
-			}
-			c.mu.Unlock()
-		}
+	if !ok {
 		return nil, false
 	}
-	return entry.data, true
+
+	// Expired — remove lazily
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	// Re-check under write lock; return fresh entry if present
+	if e, exists := c.entries[key]; exists {
+		if time.Now().After(e.expiresAt) {
+			delete(c.entries, key)
+			return nil, false
+		}
+		return e.data, true
+	}
+	return nil, false
 }
 
 func (c *cache) Set(key string, value any) {

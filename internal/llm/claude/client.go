@@ -35,6 +35,9 @@ var _ core.LLMProvider = (*Client)(nil)
 
 // New creates a new Claude client.
 func New(apiKey, model, baseURL string, logger *slog.Logger) *Client {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	if model == "" {
 		model = defaultModel
 	}

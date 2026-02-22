@@ -6,14 +6,9 @@ run:
   tests: true
   build-tags:
     - integration
-  skip-dirs:
-    - vendor
-    - third_party
-    - .git
-    - tmp
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*\\.gen\\.go$"
+  # skip-files:  # Deprecated: use issues.exclude-files
+    # - ".*\\.pb\\.go$"
+    # - ".*\\.gen\\.go$"
 
 output:
   formats:
@@ -227,7 +222,7 @@ linters:
     - durationcheck
     - errname
     - errorlint
-    - exportloopref
+    # - exportloopref  # Deprecated: replaced by copyloopvar
     - makezero
     - nilerr
     - noctx
@@ -270,7 +265,7 @@ linters:
     - nolintlint
     - predeclared
     - reassign
-    - tenv
+    # - tenv  # Deprecated: replaced by usetesting
     - thelper
     - tparallel
     - usestdlibvars
@@ -306,6 +301,14 @@ linters:
   # - wsl              # Whitespace - слишком придирчивый
 
 issues:
+  exclude-dirs:
+    - vendor
+    - third_party
+    - .git
+    - tmp
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
   max-issues-per-linter: 50
   max-same-issues: 3
 

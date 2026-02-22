@@ -1,0 +1,102 @@
+# MediaMate Configuration Example
+# Copy this file to mediamate.yaml and fill in your API keys and URLs
+
+# LLM Provider Configuration
+llm:
+  # Provider: "claude", "openai", or "ollama"
+  provider: "claude"
+
+  # API Key (not needed for Ollama)
+  api_key: "your-api-key-here"
+
+  # Model (optional, uses provider default if not specified)
+  # Claude: "claude-3-5-sonnet-20241022", "claude-3-opus-20240229"
+  # OpenAI: "gpt-4-turbo", "gpt-4"
+  # Ollama: "llama3", "mistral"
+  model: "claude-3-5-sonnet-20241022"
+
+  # Base URL (for Ollama only)
+  # base_url: "http://localhost:11434"
+
+# TMDb API (for movie/TV metadata)
+tmdb:
+  api_key: "your-tmdb-api-key"
+
+# Media Backends (configure at least one)
+
+# Radarr (for movies)
+radarr:
+  url: "http://localhost:7878"
+  api_key: "your-radarr-api-key"
+  quality_profile: "HD-1080p"  # Optional
+  root_folder: "/movies"        # Optional
+
+# Sonarr (for TV shows)
+# sonarr:
+#   url: "http://localhost:8989"
+#   api_key: "your-sonarr-api-key"
+#   quality_profile: "HD-1080p"
+#   root_folder: "/tv"
+
+# Readarr (for books)
+# readarr:
+#   url: "http://localhost:8787"
+#   api_key: "your-readarr-api-key"
+#   quality_profile: "Standard"
+#   root_folder: "/books"
+
+# Torrent Client Configuration
+
+# qBittorrent
+qbittorrent:
+  url: "http://localhost:8080"
+  username: "your-qbittorrent-username"
+  password: "your-qbittorrent-password"
+
+# Media Server Configuration
+
+# Jellyfin
+jellyfin:
+  url: "http://localhost:8096"
+  api_key: "your-jellyfin-api-key"
+
+# Frontend Configuration
+
+# Telegram Bot
+telegram:
+  bot_token: "your-telegram-bot-token"
+  # Optional: Restrict access to specific user IDs
+  # allowed_user_ids:
+  #   - 123456789
+  #   - 987654321
+
+# Application Settings
+app:
+  # Log level: "debug", "info", "warn", "error"
+  log_level: "info"
+
+  # Data directory (for database, cache, etc.)
+  # Defaults to ~/.mediamate if not specified
+  data_dir: "/var/lib/mediamate"
+
+# Environment Variable Overrides:
+# Supported config values can be overridden with environment variables:
+# - MEDIAMATE_LLM_PROVIDER
+# - MEDIAMATE_LLM_API_KEY
+# - MEDIAMATE_LLM_MODEL
+# - MEDIAMATE_LLM_BASE_URL
+# - MEDIAMATE_TMDB_API_KEY
+# - MEDIAMATE_RADARR_URL
+# - MEDIAMATE_RADARR_API_KEY
+# - MEDIAMATE_SONARR_URL
+# - MEDIAMATE_SONARR_API_KEY
+# - MEDIAMATE_READARR_URL
+# - MEDIAMATE_READARR_API_KEY
+# - MEDIAMATE_QBITTORRENT_URL
+# - MEDIAMATE_QBITTORRENT_USERNAME
+# - MEDIAMATE_QBITTORRENT_PASSWORD
+# - MEDIAMATE_JELLYFIN_URL
+# - MEDIAMATE_JELLYFIN_API_KEY
+# - MEDIAMATE_TELEGRAM_BOT_TOKEN
+# - MEDIAMATE_LOG_LEVEL
+# - MEDIAMATE_DATA_DIR

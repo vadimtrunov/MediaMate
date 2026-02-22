@@ -95,8 +95,13 @@ func (c *Client) Add(ctx context.Context, item core.MediaItem) error {
 
 // GetStatus gets the status of a movie by its Radarr ID.
 func (c *Client) GetStatus(ctx context.Context, itemID string) (*core.MediaStatus, error) {
+	id, err := strconv.Atoi(itemID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid radarr itemID %q: %w", itemID, err)
+	}
+
 	var movie radarrMovie
-	path := fmt.Sprintf("/api/v3/movie/%s", itemID)
+	path := fmt.Sprintf("/api/v3/movie/%d", id)
 	if err := c.get(ctx, path, nil, &movie); err != nil {
 		return nil, fmt.Errorf("radarr get status: %w", err)
 	}

@@ -82,7 +82,7 @@ func toolDefGetDownloadStatus() core.Tool {
 	return core.Tool{
 		Name: "get_download_status",
 		Description: "Check the download status of a movie in Radarr by its Radarr ID." +
-			" Returns whether it's wanted, downloading, or downloaded.",
+			" Returns whether it's wanted or downloaded.",
 		Parameters: map[string]any{
 			"type": "object",
 			"properties": map[string]any{

@@ -58,3 +58,9 @@ docker-compose.override.yml
 # MediaMate specific
 downloads/
 media/
+
+# Security scan results
+gosec-results.json
+
+# Air (hot reload) tmp directory
+.air.toml

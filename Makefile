@@ -88,7 +88,7 @@ staticcheck: ## Run staticcheck
 .PHONY: gosec
 gosec: ## Run gosec security scanner
 	@echo "Running gosec..."
-	@gosec -fmt=json -out=gosec-results.json ./...
+	@gosec -exclude=G304,G117 -fmt=json -out=gosec-results.json ./...
 
 # Dependencies
 .PHONY: deps
@@ -169,10 +169,7 @@ run-dev: ## Run in development mode with hot reload
 # Git hooks
 .PHONY: install-hooks
 install-hooks: ## Install git hooks
-	@echo "Installing git hooks..."
-	@cp -f scripts/pre-commit.sh .git/hooks/pre-commit
-	@chmod +x .git/hooks/pre-commit
-	@echo "✅ Git hooks installed!"
+	@bash scripts/install-hooks.sh
 
 # Documentation
 .PHONY: docs

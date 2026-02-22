@@ -1,0 +1,75 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+# Language settings
+language: en-US
+
+# Review settings
+reviews:
+  # Enable auto reviews for all branches (including dev)
+  auto_review:
+    enabled: true
+    base_branches:
+      - main
+      - dev
+
+  # Enable review status messages
+  review_status: true
+
+  # Request changes workflow
+  request_changes_workflow: true
+
+  # Review profile
+  profile: chill
+
+  # Tools to enable
+  tools:
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+
+  # Path-based instructions
+  path_instructions:
+    - path: "**/*.go"
+      instructions: |
+        - Focus on Go best practices and idiomatic code
+        - Check for potential race conditions
+        - Verify error handling
+        - Look for security issues
+        - Suggest performance improvements
+
+    - path: "**/cmd/**"
+      instructions: |
+        - Review CLI interface and user experience
+        - Check flag parsing and help text
+        - Verify proper exit codes
+
+    - path: "**/internal/**"
+      instructions: |
+        - Ensure proper encapsulation
+        - Check interface implementations
+        - Verify no exported types leak internal details
+
+    - path: "**/*_test.go"
+      instructions: |
+        - Verify test coverage
+        - Check for table-driven tests
+        - Ensure tests are deterministic
+
+    - path: "**/Dockerfile*"
+      instructions: |
+        - Check multi-stage builds
+        - Verify minimal base images
+        - Look for security best practices
+
+    - path: "**/*.yaml"
+      instructions: |
+        - Validate YAML syntax
+        - Check for security issues (no hardcoded secrets)
+
+# Chat settings
+chat:
+  auto_reply: true
+
+# Early access features
+early_access: true

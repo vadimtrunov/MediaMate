@@ -56,10 +56,10 @@ func (c *cache) Set(key string, value any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	now := time.Now()
 	c.writes++
 	// Clean up expired entries periodically (every 100 writes)
 	if c.writes%100 == 0 {
-		now := time.Now()
 		for k, e := range c.entries {
 			if now.After(e.expiresAt) {
 				delete(c.entries, k)
@@ -69,6 +69,6 @@ func (c *cache) Set(key string, value any) {
 
 	c.entries[key] = cacheEntry{
 		data:      value,
-		expiresAt: time.Now().Add(c.ttl),
+		expiresAt: now.Add(c.ttl),
 	}
 }

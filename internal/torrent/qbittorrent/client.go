@@ -169,7 +169,7 @@ func (c *Client) doWithAuth(ctx context.Context, req *http.Request) (*http.Respo
 	}
 
 	// Session expired — re-login and retry once
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	c.mu.Lock()
 	c.loggedIn = false

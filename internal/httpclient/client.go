@@ -82,7 +82,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 		lastErr = fmt.Errorf("HTTP %d from %s", resp.StatusCode, req.URL.String())
 		lastResp = resp
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	if lastErr != nil {
@@ -151,7 +151,7 @@ func (c *Client) backoff(attempt int) time.Duration {
 	if delay > float64(c.config.MaxDelay) {
 		delay = float64(c.config.MaxDelay)
 	}
-	// Add 20% jitter
-	jitter := delay * 0.2 * rand.Float64()
+	// Add 20% jitter — cryptographic randomness not needed for backoff
+	jitter := delay * 0.2 * rand.Float64() // #nosec G404
 	return time.Duration(delay + jitter)
 }

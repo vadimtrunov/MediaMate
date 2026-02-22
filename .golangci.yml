@@ -1,0 +1,370 @@
+# Строгий, но адекватный конфиг golangci-lint
+# Ловит реальные баги и проблемы, не бесит по мелочам
+
+run:
+  timeout: 5m
+  tests: true
+  build-tags:
+    - integration
+  skip-dirs:
+    - vendor
+    - third_party
+    - .git
+    - tmp
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true
+
+linters-settings:
+  # Цикломатическая сложность
+  cyclop:
+    max-complexity: 20
+    package-average: 15
+    skip-tests: true
+
+  # Когнитивная сложность
+  gocognit:
+    min-complexity: 30
+
+  # Длина функций - разумные лимиты
+  funlen:
+    lines: 120
+    statements: 60
+    ignore-comments: true
+
+  # Вложенность
+  nestif:
+    min-complexity: 5
+
+  # Дубликаты кода
+  dupl:
+    threshold: 150
+
+  # Константы - не слишком агрессивно
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    ignore-tests: true
+
+  # Магические числа - с разумными исключениями
+  mnd:
+    checks:
+      - argument
+      - case
+      - condition
+      - return
+    ignored-numbers:
+      - '0'
+      - '1'
+      - '2'
+      - '10'
+      - '100'
+      - '1000'
+      - '1024'
+    ignored-functions:
+      - 'make'
+      - 'time.Sleep'
+      - 'time.Duration'
+
+  # Длина строк
+  lll:
+    line-length: 140
+    tab-width: 4
+
+  # Проверка ошибок
+  errcheck:
+    check-type-assertions: true
+    check-blank: false  # Разрешаем _ =
+    exclude-functions:
+      - '(*database/sql.Rows).Close'
+      - '(*database/sql.DB).Close'
+      - '(*os.File).Close'
+      - 'fmt.Print'
+      - 'fmt.Println'
+      - 'fmt.Printf'
+
+  # Error wrapping - не слишком строго
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+
+  # Govet
+  govet:
+    enable-all: true
+    disable:
+      - shadow  # Shadowing иногда OK
+      - fieldalignment  # Оптимизация памяти - позже
+
+  # Staticcheck
+  staticcheck:
+    checks: ["all"]
+
+  # Stylecheck - основное
+  stylecheck:
+    checks:
+      - "all"
+      - "-ST1000"  # Разрешаем подчеркивания в пакетах
+      - "-ST1003"  # Разрешаем MixedCaps не везде
+      - "-ST1016"  # Разрешаем методы с Recv вначале
+    initialisms: ["ACL", "API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS"]
+
+  # Gosec - security, но без паранойи
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G104  # Unhandled errors - errcheck это проверит
+      - G304  # File path from input - иногда нужно
+      - G404  # Weak random - не всегда критично
+
+  # Gocritic - включаем разумные проверки
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+      - style
+    disabled-checks:
+      - whyNoLint
+      - unnamedResult
+      - hugeParam  # Слишком придирчивый
+      - rangeValCopy
+    settings:
+      captLocal:
+        paramsOnly: false
+
+  # Revive - замена golint
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      # Базовые правила
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+      # Настраиваемые
+      - name: cognitive-complexity
+        arguments: [30]
+      - name: cyclomatic
+        arguments: [20]
+      - name: line-length-limit
+        arguments: [140]
+      - name: function-length
+        arguments: [120, 60]
+
+  # Import ordering
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/vadimtrunov/MediaMate)
+    skip-generated: true
+
+  goimports:
+    local-prefixes: github.com/vadimtrunov/MediaMate
+
+  # Misspell
+  misspell:
+    locale: US
+
+  # Nolintlint - не слишком строго
+  nolintlint:
+    allow-unused: false
+    allow-no-explanation: ["lll"]  # Для lll не нужно объяснение
+    require-explanation: false  # Пока не требуем
+    require-specific: true
+
+  # Exhaustive
+  exhaustive:
+    check-generated: false
+    default-signifies-exhaustive: true
+    package-scope-only: false
+
+linters:
+  disable-all: true
+  enable:
+    # Defaults - критично важные
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+
+    # Bug detection
+    - bodyclose
+    - contextcheck
+    - durationcheck
+    - errname
+    - errorlint
+    - exportloopref
+    - makezero
+    - nilerr
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
+
+    # Style
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - revive
+    - stylecheck
+    - unconvert
+    - unparam
+    - whitespace
+
+    # Complexity
+    - cyclop
+    - gocognit
+    - gocyclo
+    - funlen
+    - nestif
+
+    # Performance
+    - gocritic
+
+    # Code quality
+    - asciicheck
+    - bidichk
+    - dupl
+    - goconst
+    - goprintffuncname
+    - gosec
+    - lll
+    - misspell
+    - mnd
+    - nakedret
+    - nolintlint
+    - predeclared
+    - reassign
+    - tenv
+    - thelper
+    - tparallel
+    - usestdlibvars
+
+    # Dependencies
+    - gomoddirectives
+
+    # Специфичные для типов проектов
+    - loggercheck
+    - promlinter
+    - zerologlint
+
+  # ОТКЛЮЧЕНЫ (слишком строгие или annoying):
+  # - exhaustive       # Требует все case в switch - иногда излишне
+  # - exhaustruct      # Все поля структуры - слишком строго
+  # - forbidigo        # Запрет функций - настроим позже если нужно
+  # - gochecknoglobals # Глобальные переменные иногда нужны
+  # - gochecknoinits   # init() иногда нужен
+  # - godot            # Точка в комментариях - бесит
+  # - goerr113         # Требует sentinel errors - слишком строго
+  # - goheader         # Заголовок файла - не нужно
+  # - gomnd            # Используем mnd вместо (новая версия)
+  # - ireturn          # Возврат интерфейсов - иногда нужно
+  # - maintidx         # Maintainability index - экспериментально
+  # - nilnil           # (nil, nil) иногда валидно
+  # - nlreturn         # Пустая строка перед return - излишне
+  # - nonamedreturns   # Именованные return иногда полезны
+  # - paralleltest     # t.Parallel не всегда нужен
+  # - tagliatelle      # Диктует стиль тегов - может не подходить
+  # - testpackage      # Тесты в _test пакете - не всегда удобно
+  # - varnamelen       # Длина имён - будет ныть на i, j, k
+  # - wrapcheck        # Wrap всех ошибок - слишком агрессивно
+  # - wsl              # Whitespace - слишком придирчивый
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 3
+
+  exclude-use-default: true
+
+  exclude-rules:
+    # Тесты - более мягкие правила
+    - path: _test\.go
+      linters:
+        - mnd
+        - funlen
+        - gocognit
+        - gocyclo
+        - dupl
+        - lll
+        - goconst
+        - errcheck
+
+    # Main функция может быть длинной
+    - path: cmd/.*main\.go
+      linters:
+        - funlen
+        - gocognit
+        - gocyclo
+
+    # Примеры
+    - path: examples/
+      linters:
+        - mnd
+        - funlen
+        - errcheck
+        - gosec
+
+    # fmt.Errorf это wrap, не ругаемся
+    - text: "fmt.Errorf"
+      linters:
+        - errorlint
+
+    # Разрешаем некоторые defer close без проверки
+    - text: "Error return value is not checked"
+      linters:
+        - errcheck
+      source: "defer .*\\.Close\\(\\)"
+
+    # Разрешаем _ = в некоторых случаях
+    - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
+      linters:
+        - errcheck
+
+  fix: false
+
+severity:
+  default-severity: warning
+  rules:
+    - linters:
+        - dupl
+        - lll
+      severity: info
+    - linters:
+        - gosec
+        - errcheck
+      severity: error

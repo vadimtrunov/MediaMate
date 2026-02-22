@@ -1,0 +1,68 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "en"
+early_access: false
+enable_free_tier: true
+
+reviews:
+  profile: "chill"  # assertive | chill | default
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  path_filters:
+    - "!**/*.md"
+    - "!**/*.txt"
+    - "!**/*.json"
+    - "!**/*.yaml"
+    - "!**/*.yml"
+
+  path_instructions:
+    - path: "internal/**/*.go"
+      instructions: |
+        - Focus on Go best practices and idiomatic code
+        - Check for proper error handling
+        - Look for potential race conditions
+        - Verify context usage
+        - Check for resource leaks (goroutines, connections)
+
+    - path: "cmd/**/*.go"
+      instructions: |
+        - Ensure CLI flags are well documented
+        - Check for proper exit codes
+        - Verify configuration validation
+
+    - path: "**/*_test.go"
+      instructions: |
+        - Check for table-driven tests
+        - Verify test coverage for edge cases
+        - Look for proper cleanup (defer, t.Cleanup)
+        - Check for race condition tests
+
+chat:
+  auto_reply: true
+
+# Знания о проекте для контекста
+knowledge_base:
+  - |
+    MediaMate is an AI-powered media assistant for home servers.
+    It's written in Go and integrates with:
+    - LLM providers (Claude, OpenAI, Ollama)
+    - Media backends (Radarr, Sonarr, Readarr)
+    - Torrent clients (qBittorrent, Transmission, Deluge)
+    - Media servers (Jellyfin, Plex)
+    - Chat frontends (Telegram, CLI)
+
+  - |
+    Architecture principles:
+    - Interface-first design (everything is pluggable)
+    - ARM64 first (Raspberry Pi 5 as primary target)
+    - Config-driven (YAML + env vars)
+    - Fail-safe (graceful degradation)

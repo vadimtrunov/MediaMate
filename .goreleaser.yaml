@@ -1,0 +1,145 @@
+version: 2
+
+project_name: mediamate
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: mediamate
+    main: ./cmd/mediamate
+    binary: mediamate
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: mediamate
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+      - docs/**/*
+      - configs/mediamate.example.yaml
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+
+dockers:
+  - image_templates:
+      - "ghcr.io/vadimtrunov/mediamate:{{ .Version }}-amd64"
+      - "ghcr.io/vadimtrunov/mediamate:latest-amd64"
+    use: buildx
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: amd64
+
+  - image_templates:
+      - "ghcr.io/vadimtrunov/mediamate:{{ .Version }}-arm64"
+      - "ghcr.io/vadimtrunov/mediamate:latest-arm64"
+    use: buildx
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: arm64
+
+docker_manifests:
+  - name_template: "ghcr.io/vadimtrunov/mediamate:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/vadimtrunov/mediamate:{{ .Version }}-amd64"
+      - "ghcr.io/vadimtrunov/mediamate:{{ .Version }}-arm64"
+
+  - name_template: "ghcr.io/vadimtrunov/mediamate:latest"
+    image_templates:
+      - "ghcr.io/vadimtrunov/mediamate:latest-amd64"
+      - "ghcr.io/vadimtrunov/mediamate:latest-arm64"
+
+release:
+  github:
+    owner: vadimtrunov
+    name: MediaMate
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} v{{.Version}}"
+  header: |
+    ## MediaMate {{.Version}}
+
+    Thanks to all contributors! 🎉
+  footer: |
+    ## Installation
+
+    ### Binary
+    ```bash
+    # Linux amd64
+    wget https://github.com/vadimtrunov/MediaMate/releases/download/{{ .Tag }}/mediamate_{{ .Version }}_Linux_x86_64.tar.gz
+    tar -xzf mediamate_{{ .Version }}_Linux_x86_64.tar.gz
+    sudo mv mediamate /usr/local/bin/
+
+    # Linux arm64 (Raspberry Pi)
+    wget https://github.com/vadimtrunov/MediaMate/releases/download/{{ .Tag }}/mediamate_{{ .Version }}_Linux_arm64.tar.gz
+    tar -xzf mediamate_{{ .Version }}_Linux_arm64.tar.gz
+    sudo mv mediamate /usr/local/bin/
+    ```
+
+    ### Docker
+    ```bash
+    docker pull ghcr.io/vadimtrunov/mediamate:{{ .Version }}
+    ```
+
+    **Full Changelog**: https://github.com/vadimtrunov/MediaMate/compare/{{ .PreviousTag }}...{{ .Tag }}

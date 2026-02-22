@@ -14,6 +14,7 @@ type cache struct {
 	mu      sync.RWMutex
 	entries map[string]cacheEntry
 	ttl     time.Duration
+	writes  int
 }
 
 func newCache(ttl time.Duration) *cache {
@@ -47,8 +48,9 @@ func (c *cache) Set(key string, value any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	c.writes++
 	// Clean up expired entries periodically (every 100 writes)
-	if len(c.entries)%100 == 0 {
+	if c.writes%100 == 0 {
 		now := time.Now()
 		for k, e := range c.entries {
 			if now.After(e.expiresAt) {

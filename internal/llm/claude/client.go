@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/vadimtrunov/MediaMate/internal/core"
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
@@ -40,6 +41,7 @@ func New(apiKey, model, baseURL string, logger *slog.Logger) *Client {
 	if baseURL == "" {
 		baseURL = defaultBaseURL
 	}
+	baseURL = strings.TrimRight(baseURL, "/")
 
 	return &Client{
 		baseURL:   baseURL,

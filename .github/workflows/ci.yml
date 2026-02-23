@@ -82,7 +82,7 @@ jobs:
           go build -v -ldflags="-s -w" -o bin/mediamate-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/mediamate
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: mediamate-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/mediamate-${{ matrix.goos }}-${{ matrix.goarch }}

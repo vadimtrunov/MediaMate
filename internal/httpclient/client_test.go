@@ -254,6 +254,10 @@ func TestShouldRetry(t *testing.T) {
 		{502, http.MethodPost, false},
 		{503, http.MethodPost, false},
 		{504, http.MethodPost, false},
+		// PATCH: only retry on 429
+		{429, http.MethodPatch, true},
+		{500, http.MethodPatch, false},
+		{502, http.MethodPatch, false},
 	}
 	for _, tt := range tests {
 		if got := shouldRetry(tt.code, tt.method); got != tt.expect {

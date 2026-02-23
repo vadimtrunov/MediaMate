@@ -19,7 +19,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check if Dockerfile exists
         id: dockerfile_check
@@ -63,7 +63,7 @@ jobs:
 
       - name: Build and push
         if: steps.dockerfile_check.outputs.exists == 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64

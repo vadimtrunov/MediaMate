@@ -32,8 +32,8 @@ func TestSearchMovies(t *testing.T) {
 		if r.URL.Path != "/search/movie" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
-		if r.URL.Query().Get("api_key") != "test-key" {
-			t.Error("missing api_key")
+		if r.Header.Get("Authorization") != "Bearer test-key" {
+			t.Errorf("expected Bearer auth, got %q", r.Header.Get("Authorization"))
 		}
 		if r.URL.Query().Get("query") != "inception" {
 			t.Errorf("unexpected query: %s", r.URL.Query().Get("query"))

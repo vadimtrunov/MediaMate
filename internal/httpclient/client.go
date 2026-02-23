@@ -13,19 +13,19 @@ import (
 
 // Config holds retry and timeout configuration.
 type Config struct {
-	MaxRetries int
-	BaseDelay  time.Duration
-	MaxDelay   time.Duration
-	Timeout    time.Duration
+	MaxAttempts int
+	BaseDelay   time.Duration
+	MaxDelay    time.Duration
+	Timeout     time.Duration
 }
 
 // DefaultConfig returns sensible defaults.
 func DefaultConfig() Config {
 	return Config{
-		MaxRetries: 3,
-		BaseDelay:  1 * time.Second,
-		MaxDelay:   10 * time.Second,
-		Timeout:    30 * time.Second,
+		MaxAttempts: 3,
+		BaseDelay:   1 * time.Second,
+		MaxDelay:    10 * time.Second,
+		Timeout:     30 * time.Second,
 	}
 }
 
@@ -68,7 +68,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	var lastErr error
 	var lastResp *http.Response
 
-	for attempt := range c.config.MaxRetries {
+	for attempt := range c.config.MaxAttempts {
 		if attempt > 0 {
 			if err := c.waitBeforeRetry(req.Context(), attempt, lastResp, req.URL.String()); err != nil {
 				return nil, err
@@ -101,9 +101,9 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	if lastErr != nil {
-		return nil, fmt.Errorf("request failed after %d attempts: %w", c.config.MaxRetries, lastErr)
+		return nil, fmt.Errorf("request failed after %d attempts: %w", c.config.MaxAttempts, lastErr)
 	}
-	return nil, fmt.Errorf("request failed after %d attempts", c.config.MaxRetries)
+	return nil, fmt.Errorf("request failed after %d attempts", c.config.MaxAttempts)
 }
 
 func (c *Client) waitBeforeRetry(ctx context.Context, attempt int, lastResp *http.Response, url string) error {

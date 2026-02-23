@@ -135,7 +135,6 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 	}
 
 	q := u.Query()
-	q.Set("api_key", c.apiKey)
 	for k, vs := range params {
 		for _, v := range vs {
 			q.Set(k, v)
@@ -148,6 +147,7 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 		return fmt.Errorf("create request: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 
 	resp, err := c.http.Do(req)
 	if err != nil {

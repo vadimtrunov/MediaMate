@@ -23,7 +23,7 @@ type contentBlock struct {
 	Name      string `json:"name,omitempty"`        // for "tool_use"
 	Input     any    `json:"input,omitempty"`       // for "tool_use"
 	ToolUseID string `json:"tool_use_id,omitempty"` // for "tool_result"
-	Content   string `json:"content,omitempty"`     // for "tool_result"
+	Content   string `json:"content"`               // for "tool_result"
 	IsError   bool   `json:"is_error,omitempty"`    // for "tool_result"
 }
 

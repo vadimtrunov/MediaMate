@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 
 	"github.com/vadimtrunov/MediaMate/internal/core"
 	"github.com/vadimtrunov/MediaMate/internal/metadata/tmdb"
@@ -24,7 +25,9 @@ When presenting search results, number them for easy reference.`
 )
 
 // Agent orchestrates conversations between the user, LLM, and backend services.
+// Agent is safe for concurrent use; all access to history is serialized by mu.
 type Agent struct {
+	mu      sync.Mutex
 	llm     core.LLMProvider
 	tmdb    *tmdb.Client
 	backend core.MediaBackend
@@ -54,6 +57,9 @@ func New(llm core.LLMProvider, tmdbClient *tmdb.Client, backend core.MediaBacken
 
 // HandleMessage processes a user message and returns the assistant's response.
 func (a *Agent) HandleMessage(ctx context.Context, userMessage string) (string, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	checkpoint := len(a.history)
 	a.history = append(a.history, core.Message{
 		Role:    "user",
@@ -98,6 +104,7 @@ func (a *Agent) HandleMessage(ctx context.Context, userMessage string) (string, 
 		return resp.Content, nil
 	}
 
+	a.history = a.history[:checkpoint]
 	return "", fmt.Errorf("agent exceeded maximum tool iterations (%d)", maxToolIterations)
 }
 
@@ -124,6 +131,8 @@ func (a *Agent) executeTool(ctx context.Context, call core.ToolCall) (string, er
 
 // Reset clears the conversation history.
 func (a *Agent) Reset() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.history = []core.Message{
 		{Role: "system", Content: systemPrompt},
 	}

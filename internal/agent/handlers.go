@@ -86,7 +86,12 @@ func (a *Agent) toolDownloadMovie(ctx context.Context, args map[string]any) (str
 		return "", fmt.Errorf("failed to add movie: %w", err)
 	}
 
-	return fmt.Sprintf(`{"status":"added","title":%q,"tmdb_id":%d}`, title, tmdbID), nil
+	result := map[string]any{"status": "added", "title": title, "tmdb_id": tmdbID}
+	data, err := json.Marshal(result)
+	if err != nil {
+		return "", fmt.Errorf("marshal download result: %w", err)
+	}
+	return string(data), nil
 }
 
 func (a *Agent) toolGetDownloadStatus(ctx context.Context, args map[string]any) (string, error) {

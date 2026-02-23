@@ -51,10 +51,10 @@ func TestDo_RetryOn500(t *testing.T) {
 	defer server.Close()
 
 	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  1 * time.Millisecond,
-		MaxDelay:   10 * time.Millisecond,
-		Timeout:    5 * time.Second,
+		MaxAttempts: 3,
+		BaseDelay:   1 * time.Millisecond,
+		MaxDelay:    10 * time.Millisecond,
+		Timeout:     5 * time.Second,
 	}
 	client := New(cfg, testLogger())
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, http.NoBody)
@@ -87,10 +87,10 @@ func TestDo_RetryOn429WithRetryAfter(t *testing.T) {
 	defer server.Close()
 
 	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  1 * time.Millisecond,
-		MaxDelay:   10 * time.Millisecond,
-		Timeout:    5 * time.Second,
+		MaxAttempts: 3,
+		BaseDelay:   1 * time.Millisecond,
+		MaxDelay:    10 * time.Millisecond,
+		Timeout:     5 * time.Second,
 	}
 	client := New(cfg, testLogger())
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, http.NoBody)
@@ -113,10 +113,10 @@ func TestDo_ExhaustedRetries(t *testing.T) {
 	defer server.Close()
 
 	cfg := Config{
-		MaxRetries: 2,
-		BaseDelay:  1 * time.Millisecond,
-		MaxDelay:   10 * time.Millisecond,
-		Timeout:    5 * time.Second,
+		MaxAttempts: 2,
+		BaseDelay:   1 * time.Millisecond,
+		MaxDelay:    10 * time.Millisecond,
+		Timeout:     5 * time.Second,
 	}
 	client := New(cfg, testLogger())
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, http.NoBody)
@@ -137,10 +137,10 @@ func TestDo_NoRetryOn400(t *testing.T) {
 	defer server.Close()
 
 	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  1 * time.Millisecond,
-		MaxDelay:   10 * time.Millisecond,
-		Timeout:    5 * time.Second,
+		MaxAttempts: 3,
+		BaseDelay:   1 * time.Millisecond,
+		MaxDelay:    10 * time.Millisecond,
+		Timeout:     5 * time.Second,
 	}
 	client := New(cfg, testLogger())
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, http.NoBody)
@@ -176,10 +176,10 @@ func TestDo_PostWithBody(t *testing.T) {
 	defer server.Close()
 
 	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  1 * time.Millisecond,
-		MaxDelay:   10 * time.Millisecond,
-		Timeout:    5 * time.Second,
+		MaxAttempts: 3,
+		BaseDelay:   1 * time.Millisecond,
+		MaxDelay:    10 * time.Millisecond,
+		Timeout:     5 * time.Second,
 	}
 	client := New(cfg, testLogger())
 
@@ -209,10 +209,10 @@ func TestDo_PostNoRetryOn500(t *testing.T) {
 	defer server.Close()
 
 	cfg := Config{
-		MaxRetries: 3,
-		BaseDelay:  1 * time.Millisecond,
-		MaxDelay:   10 * time.Millisecond,
-		Timeout:    5 * time.Second,
+		MaxAttempts: 3,
+		BaseDelay:   1 * time.Millisecond,
+		MaxDelay:    10 * time.Millisecond,
+		Timeout:     5 * time.Second,
 	}
 	client := New(cfg, testLogger())
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL, http.NoBody)

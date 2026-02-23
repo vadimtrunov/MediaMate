@@ -18,12 +18,13 @@ import (
 
 // Client implements core.MediaBackend for Radarr.
 type Client struct {
-	baseURL        string
-	apiKey         string
-	http           *httpclient.Client
-	qualityProfile string
-	rootFolder     string
-	logger         *slog.Logger
+	baseURL          string
+	apiKey           string
+	http             *httpclient.Client
+	qualityProfile   string
+	qualityProfileID int // cached after first resolution; 0 means not yet resolved
+	rootFolder       string
+	logger           *slog.Logger
 }
 
 var _ core.MediaBackend = (*Client)(nil)
@@ -126,6 +127,10 @@ func (c *Client) ListItems(ctx context.Context) ([]core.MediaItem, error) {
 func (c *Client) Type() string { return "radarr" }
 
 func (c *Client) resolveQualityProfileID(ctx context.Context) (int, error) {
+	if c.qualityProfileID != 0 {
+		return c.qualityProfileID, nil
+	}
+
 	var profiles []radarrQualityProfile
 	if err := c.get(ctx, "/api/v3/qualityprofile", nil, &profiles); err != nil {
 		return 0, err
@@ -134,18 +139,23 @@ func (c *Client) resolveQualityProfileID(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("no quality profiles found")
 	}
 
-	// If a profile name is configured, find it
+	var id int
 	if c.qualityProfile != "" {
 		for _, p := range profiles {
 			if strings.EqualFold(p.Name, c.qualityProfile) {
-				return p.ID, nil
+				id = p.ID
+				break
 			}
 		}
-		return 0, fmt.Errorf("quality profile %q not found", c.qualityProfile)
+		if id == 0 {
+			return 0, fmt.Errorf("quality profile %q not found", c.qualityProfile)
+		}
+	} else {
+		id = profiles[0].ID
 	}
 
-	// Default to first profile
-	return profiles[0].ID, nil
+	c.qualityProfileID = id
+	return id, nil
 }
 
 func (c *Client) resolveRootFolder(ctx context.Context) (string, error) {

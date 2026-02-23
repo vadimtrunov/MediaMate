@@ -260,10 +260,10 @@ func (c *Config) validateLLM() error {
 	if c.LLM.Provider == "" {
 		return fmt.Errorf("llm.provider is required")
 	}
-	if c.LLM.Provider != "claude" && c.LLM.Provider != "openai" && c.LLM.Provider != "ollama" {
-		return fmt.Errorf("llm.provider must be 'claude', 'openai', or 'ollama'")
+	if c.LLM.Provider != "claude" {
+		return fmt.Errorf("llm.provider must be 'claude' (only supported provider in this version)")
 	}
-	if c.LLM.Provider != "ollama" && c.LLM.APIKey == "" {
+	if c.LLM.APIKey == "" {
 		return fmt.Errorf("llm.api_key is required for provider '%s'", c.LLM.Provider)
 	}
 	return nil

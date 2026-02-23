@@ -64,3 +64,6 @@ gosec-results.json
 
 # Air (hot reload) tmp directory
 .air.toml
+
+# Compiled binary
+/mediamate

@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math"
@@ -69,7 +70,9 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 	for attempt := range c.config.MaxRetries {
 		if attempt > 0 {
-			c.waitBeforeRetry(attempt, lastResp, req.URL.String())
+			if err := c.waitBeforeRetry(req.Context(), attempt, lastResp, req.URL.String()); err != nil {
+				return nil, err
+			}
 			if err := replayBody(req); err != nil {
 				return nil, err
 			}
@@ -103,10 +106,13 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return nil, fmt.Errorf("request failed after %d attempts", c.config.MaxRetries)
 }
 
-func (c *Client) waitBeforeRetry(attempt int, lastResp *http.Response, url string) {
+func (c *Client) waitBeforeRetry(ctx context.Context, attempt int, lastResp *http.Response, url string) error {
 	delay := c.backoff(attempt)
 	if d := retryAfterDelay(lastResp); d > delay {
 		delay = d
+	}
+	if delay > c.config.MaxDelay {
+		delay = c.config.MaxDelay
 	}
 
 	c.logger.Debug("retrying request",
@@ -114,7 +120,13 @@ func (c *Client) waitBeforeRetry(attempt int, lastResp *http.Response, url strin
 		slog.String("delay", delay.String()),
 		slog.String("url", url),
 	)
-	time.Sleep(delay)
+
+	select {
+	case <-time.After(delay):
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func retryAfterDelay(resp *http.Response) time.Duration {

@@ -54,6 +54,7 @@ func New(llm core.LLMProvider, tmdbClient *tmdb.Client, backend core.MediaBacken
 
 // HandleMessage processes a user message and returns the assistant's response.
 func (a *Agent) HandleMessage(ctx context.Context, userMessage string) (string, error) {
+	checkpoint := len(a.history)
 	a.history = append(a.history, core.Message{
 		Role:    "user",
 		Content: userMessage,
@@ -62,6 +63,7 @@ func (a *Agent) HandleMessage(ctx context.Context, userMessage string) (string, 
 	for range maxToolIterations {
 		resp, err := a.llm.Chat(ctx, a.history, a.tools)
 		if err != nil {
+			a.history = a.history[:checkpoint]
 			return "", fmt.Errorf("llm chat: %w", err)
 		}
 

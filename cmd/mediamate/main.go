@@ -119,31 +119,57 @@ func initTorrent(cfg *config.Config, logger *slog.Logger) (core.TorrentClient, e
 }
 
 func runInteractiveLoop(ctx context.Context, a *agent.Agent) {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("\n> ")
-	for scanner.Scan() {
-		input := strings.TrimSpace(scanner.Text())
-		if input == "" {
-			fmt.Print("> ")
-			continue
-		}
-		if input == "quit" || input == "exit" {
-			fmt.Println("Goodbye!")
-			return
-		}
-		if input == "/reset" {
-			a.Reset()
-			fmt.Println("Conversation reset.")
-			fmt.Print("\n> ")
-			continue
-		}
+	inputCh := make(chan string)
+	errCh := make(chan error, 1)
 
-		response, err := a.HandleMessage(ctx, input)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		} else {
-			fmt.Printf("\n%s\n", response)
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			inputCh <- scanner.Text()
 		}
-		fmt.Print("\n> ")
+		if err := scanner.Err(); err != nil {
+			errCh <- err
+		}
+		close(inputCh)
+	}()
+
+	fmt.Print("\n> ")
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("\nGoodbye!")
+			return
+		case err := <-errCh:
+			fmt.Fprintf(os.Stderr, "Input error: %v\n", err)
+			return
+		case line, ok := <-inputCh:
+			if !ok {
+				fmt.Println("\nGoodbye!")
+				return
+			}
+			input := strings.TrimSpace(line)
+			if input == "" {
+				fmt.Print("> ")
+				continue
+			}
+			if input == "quit" || input == "exit" {
+				fmt.Println("Goodbye!")
+				return
+			}
+			if input == "/reset" {
+				a.Reset()
+				fmt.Println("Conversation reset.")
+				fmt.Print("\n> ")
+				continue
+			}
+
+			response, err := a.HandleMessage(ctx, input)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			} else {
+				fmt.Printf("\n%s\n", response)
+			}
+			fmt.Print("\n> ")
+		}
 	}
 }

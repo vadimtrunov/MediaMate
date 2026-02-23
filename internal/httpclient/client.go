@@ -83,7 +83,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 			if req.Context().Err() != nil {
 				return nil, req.Context().Err()
 			}
-			if req.Method == http.MethodPost {
+			if !isIdempotent(req.Method) {
 				return nil, err
 			}
 			lastErr = err
@@ -156,14 +156,23 @@ func replayBody(req *http.Request) error {
 	return nil
 }
 
+// isIdempotent returns true for HTTP methods that are safe to retry.
+func isIdempotent(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete, http.MethodOptions:
+		return true
+	}
+	return false
+}
+
 // shouldRetry returns true for status codes that warrant a retry.
-// POST requests are only retried on 429 (rate limit) to avoid duplicate
-// side effects on non-idempotent endpoints.
+// Non-idempotent methods (POST, PATCH) are only retried on 429 (rate limit)
+// to avoid duplicate side effects.
 func shouldRetry(statusCode int, method string) bool {
 	if statusCode == http.StatusTooManyRequests {
 		return true
 	}
-	if method == http.MethodPost {
+	if !isIdempotent(method) {
 		return false
 	}
 	switch statusCode {

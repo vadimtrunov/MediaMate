@@ -165,7 +165,7 @@ func TestDo_PostWithBody(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		n := calls.Add(1)
 		if n == 1 {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusTooManyRequests)
 			return
 		}
 		if string(body) != "test body" {
@@ -200,26 +200,64 @@ func TestDo_PostWithBody(t *testing.T) {
 	}
 }
 
+func TestDo_PostNoRetryOn500(t *testing.T) {
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	cfg := Config{
+		MaxRetries: 3,
+		BaseDelay:  1 * time.Millisecond,
+		MaxDelay:   10 * time.Millisecond,
+		Timeout:    5 * time.Second,
+	}
+	client := New(cfg, testLogger())
+	req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL, http.NoBody)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", resp.StatusCode)
+	}
+	if calls.Load() != 1 {
+		t.Errorf("expected 1 call (no retry for POST on 5xx), got %d", calls.Load())
+	}
+}
+
 func TestShouldRetry(t *testing.T) {
 	tests := []struct {
 		code   int
+		method string
 		expect bool
 	}{
-		{200, false},
-		{201, false},
-		{400, false},
-		{401, false},
-		{403, false},
-		{404, false},
-		{429, true},
-		{500, true},
-		{502, true},
-		{503, true},
-		{504, true},
+		{200, http.MethodGet, false},
+		{201, http.MethodGet, false},
+		{400, http.MethodGet, false},
+		{401, http.MethodGet, false},
+		{403, http.MethodGet, false},
+		{404, http.MethodGet, false},
+		{429, http.MethodGet, true},
+		{500, http.MethodGet, true},
+		{502, http.MethodGet, true},
+		{503, http.MethodGet, true},
+		{504, http.MethodGet, true},
+		// POST: only retry on 429
+		{429, http.MethodPost, true},
+		{500, http.MethodPost, false},
+		{502, http.MethodPost, false},
+		{503, http.MethodPost, false},
+		{504, http.MethodPost, false},
 	}
 	for _, tt := range tests {
-		if got := shouldRetry(tt.code); got != tt.expect {
-			t.Errorf("shouldRetry(%d) = %v, want %v", tt.code, got, tt.expect)
+		if got := shouldRetry(tt.code, tt.method); got != tt.expect {
+			t.Errorf("shouldRetry(%d, %s) = %v, want %v", tt.code, tt.method, got, tt.expect)
 		}
 	}
 }

@@ -76,7 +76,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 			continue
 		}
 
-		if !shouldRetry(resp.StatusCode) {
+		if !shouldRetry(resp.StatusCode, req.Method) {
 			return resp, nil
 		}
 
@@ -133,10 +133,17 @@ func replayBody(req *http.Request) error {
 }
 
 // shouldRetry returns true for status codes that warrant a retry.
-func shouldRetry(statusCode int) bool {
+// POST requests are only retried on 429 (rate limit) to avoid duplicate
+// side effects on non-idempotent endpoints.
+func shouldRetry(statusCode int, method string) bool {
+	if statusCode == http.StatusTooManyRequests {
+		return true
+	}
+	if method == http.MethodPost {
+		return false
+	}
 	switch statusCode {
-	case http.StatusTooManyRequests,
-		http.StatusInternalServerError,
+	case http.StatusInternalServerError,
 		http.StatusBadGateway,
 		http.StatusServiceUnavailable,
 		http.StatusGatewayTimeout:

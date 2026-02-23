@@ -37,6 +37,9 @@ type Client struct {
 
 // New creates a new Client with a default http.Client.
 func New(cfg Config, logger *slog.Logger) *Client {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &Client{
 		http: &http.Client{
 			Timeout: cfg.Timeout,
@@ -48,6 +51,9 @@ func New(cfg Config, logger *slog.Logger) *Client {
 
 // NewWithHTTPClient creates a Client with a custom http.Client (e.g. for cookie jars).
 func NewWithHTTPClient(cfg Config, httpClient *http.Client, logger *slog.Logger) *Client {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &Client{
 		http:   httpClient,
 		config: cfg,
@@ -71,6 +77,12 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 		resp, err := c.http.Do(req)
 		if err != nil {
+			if req.Context().Err() != nil {
+				return nil, req.Context().Err()
+			}
+			if req.Method == http.MethodPost {
+				return nil, err
+			}
 			lastErr = err
 			lastResp = nil
 			continue

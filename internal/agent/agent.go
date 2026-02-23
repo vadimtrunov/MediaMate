@@ -36,6 +36,9 @@ type Agent struct {
 
 // New creates a new Agent.
 func New(llm core.LLMProvider, tmdbClient *tmdb.Client, backend core.MediaBackend, torrent core.TorrentClient, logger *slog.Logger) *Agent {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &Agent{
 		llm:     llm,
 		tmdb:    tmdbClient,

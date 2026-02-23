@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
@@ -155,9 +156,9 @@ func TestGetSimilar(t *testing.T) {
 }
 
 func TestSearchMoviesCaching(t *testing.T) {
-	calls := 0
+	var calls atomic.Int32
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		calls++
+		calls.Add(1)
 		json.NewEncoder(w).Encode(searchResponse{
 			Page:    1,
 			Results: []Movie{{ID: 1, Title: "Test"}},
@@ -176,8 +177,8 @@ func TestSearchMoviesCaching(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if calls != 1 {
-		t.Errorf("expected 1 server call (cache hit), got %d", calls)
+	if calls.Load() != 1 {
+		t.Errorf("expected 1 server call (cache hit), got %d", calls.Load())
 	}
 }
 

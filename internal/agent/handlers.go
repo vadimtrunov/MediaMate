@@ -21,7 +21,11 @@ func (a *Agent) toolSearchMovie(ctx context.Context, args map[string]any) (strin
 
 	year := 0
 	if _, ok := args["year"]; ok {
-		year, _ = extractIntArg(args, "year")
+		var err error
+		year, err = extractIntArg(args, "year")
+		if err != nil {
+			return "", err
+		}
 	}
 
 	movies, err := a.tmdb.SearchMovies(ctx, query, year)

@@ -19,6 +19,8 @@ When a user asks about a movie, use the search_movie tool to find it.
 When they want to download something, use download_movie with the TMDb ID.
 When they want recommendations, use recommend_similar.
 When they ask about active downloads, use list_downloads.
+When they ask if a movie is available to watch, use check_availability.
+When they want a link to watch a movie, use get_watch_link.
 
 Be concise but friendly. Format movie information clearly with title, year, and rating.
 When presenting search results, number them for easy reference.`
@@ -26,25 +28,34 @@ When presenting search results, number them for easy reference.`
 
 // Agent orchestrates conversations between the user, LLM, and backend services.
 type Agent struct {
-	llm     core.LLMProvider
-	tmdb    *tmdb.Client
-	backend core.MediaBackend
-	torrent core.TorrentClient
-	history []core.Message
-	tools   []core.Tool
-	logger  *slog.Logger
+	llm         core.LLMProvider
+	tmdb        *tmdb.Client
+	backend     core.MediaBackend
+	torrent     core.TorrentClient
+	mediaServer core.MediaServer
+	history     []core.Message
+	tools       []core.Tool
+	logger      *slog.Logger
 }
 
 // New creates a new Agent.
-func New(llm core.LLMProvider, tmdbClient *tmdb.Client, backend core.MediaBackend, torrent core.TorrentClient, logger *slog.Logger) *Agent {
+func New(
+	llm core.LLMProvider,
+	tmdbClient *tmdb.Client,
+	backend core.MediaBackend,
+	torrent core.TorrentClient,
+	mediaServer core.MediaServer,
+	logger *slog.Logger,
+) *Agent {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	return &Agent{
-		llm:     llm,
-		tmdb:    tmdbClient,
-		backend: backend,
-		torrent: torrent,
+		llm:         llm,
+		tmdb:        tmdbClient,
+		backend:     backend,
+		torrent:     torrent,
+		mediaServer: mediaServer,
 		history: []core.Message{
 			{Role: "system", Content: systemPrompt},
 		},
@@ -119,6 +130,10 @@ func (a *Agent) executeTool(ctx context.Context, call core.ToolCall) (string, er
 		return a.toolRecommendSimilar(ctx, call.Arguments)
 	case "list_downloads":
 		return a.toolListDownloads(ctx, call.Arguments)
+	case "check_availability":
+		return a.toolCheckAvailability(ctx, call.Arguments)
+	case "get_watch_link":
+		return a.toolGetWatchLink(ctx, call.Arguments)
 	default:
 		return "", fmt.Errorf("unknown tool: %s", call.Name)
 	}

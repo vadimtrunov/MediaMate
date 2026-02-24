@@ -8,7 +8,7 @@ import (
 )
 
 func testAgentFactory() *agent.Agent {
-	return agent.New(nil, nil, nil, nil, nil)
+	return agent.New(nil, nil, nil, nil, nil, nil)
 }
 
 func TestSessionManager_IsAllowed(t *testing.T) {

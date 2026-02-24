@@ -37,7 +37,7 @@ func testLogger() *slog.Logger {
 
 func newTestAgent(responses ...*core.Response) *agent.Agent {
 	llm := &mockLLM{responses: responses}
-	return agent.New(llm, nil, nil, nil, testLogger())
+	return agent.New(llm, nil, nil, nil, nil, testLogger())
 }
 
 func TestChatModel_Init(t *testing.T) {

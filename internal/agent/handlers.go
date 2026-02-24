@@ -165,6 +165,60 @@ func (a *Agent) toolListDownloads(ctx context.Context, _ map[string]any) (string
 	return string(result), nil
 }
 
+// toolCheckAvailability checks if a movie is available on the media server.
+func (a *Agent) toolCheckAvailability(ctx context.Context, args map[string]any) (string, error) {
+	if a.mediaServer == nil {
+		return "", fmt.Errorf("no media server configured")
+	}
+
+	title, ok := args["title"].(string)
+	if !ok || title == "" {
+		return "", fmt.Errorf("check_availability requires a 'title' string argument")
+	}
+
+	available, err := a.mediaServer.IsAvailable(ctx, title)
+	if err != nil {
+		return "", fmt.Errorf("check availability failed: %w", err)
+	}
+
+	resp := map[string]any{
+		"title":     title,
+		"available": available,
+	}
+	result, err := json.Marshal(resp)
+	if err != nil {
+		return "", fmt.Errorf("marshal availability response: %w", err)
+	}
+	return string(result), nil
+}
+
+// toolGetWatchLink gets a direct watch link from the media server.
+func (a *Agent) toolGetWatchLink(ctx context.Context, args map[string]any) (string, error) {
+	if a.mediaServer == nil {
+		return "", fmt.Errorf("no media server configured")
+	}
+
+	title, ok := args["title"].(string)
+	if !ok || title == "" {
+		return "", fmt.Errorf("get_watch_link requires a 'title' string argument")
+	}
+
+	link, err := a.mediaServer.GetLink(ctx, title)
+	if err != nil {
+		return "", fmt.Errorf("get watch link failed: %w", err)
+	}
+
+	resp := map[string]any{
+		"title": title,
+		"link":  link,
+	}
+	result, err := json.Marshal(resp)
+	if err != nil {
+		return "", fmt.Errorf("marshal watch link response: %w", err)
+	}
+	return string(result), nil
+}
+
 // extractIntArg extracts an integer argument from a tool call arguments map.
 func extractIntArg(args map[string]any, key string) (int, error) {
 	val, ok := args[key]

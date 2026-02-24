@@ -88,7 +88,7 @@ func TestHandleMessage_SimpleResponse(t *testing.T) {
 		},
 	}
 
-	a := New(llm, nil, nil, nil, testLogger())
+	a := New(llm, nil, nil, nil, nil, testLogger())
 	resp, err := a.HandleMessage(context.Background(), "Hi")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -112,7 +112,7 @@ func TestHandleMessage_WithToolCall(t *testing.T) {
 	}
 
 	// tmdb is nil — tool will return error, but LLM gets the error as tool result and continues
-	a := New(llm, nil, nil, nil, testLogger())
+	a := New(llm, nil, nil, nil, nil, testLogger())
 
 	resp, err := a.HandleMessage(context.Background(), "Find inception")
 	if err != nil {
@@ -142,7 +142,7 @@ func TestHandleMessage_DownloadMovie(t *testing.T) {
 		},
 	}
 
-	a := New(llm, nil, backend, nil, testLogger())
+	a := New(llm, nil, backend, nil, nil, testLogger())
 	resp, err := a.HandleMessage(context.Background(), "Download inception")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -175,7 +175,7 @@ func TestHandleMessage_ListDownloads(t *testing.T) {
 		},
 	}
 
-	a := New(llm, nil, nil, torrent, testLogger())
+	a := New(llm, nil, nil, torrent, nil, testLogger())
 	resp, err := a.HandleMessage(context.Background(), "What's downloading?")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -197,7 +197,7 @@ func TestHandleMessage_MaxIterations(t *testing.T) {
 	}
 
 	torrent := &mockTorrent{}
-	a := New(llm, nil, nil, torrent, testLogger())
+	a := New(llm, nil, nil, torrent, nil, testLogger())
 	_, err := a.HandleMessage(context.Background(), "Loop forever")
 	if err == nil {
 		t.Fatal("expected error for max iterations")
@@ -220,7 +220,7 @@ func TestHandleMessage_ToolError(t *testing.T) {
 	}
 
 	// No backend configured — tool will return error
-	a := New(llm, nil, nil, nil, testLogger())
+	a := New(llm, nil, nil, nil, nil, testLogger())
 	resp, err := a.HandleMessage(context.Background(), "Download test")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -249,7 +249,7 @@ func TestReset(t *testing.T) {
 		},
 	}
 
-	a := New(llm, nil, nil, nil, testLogger())
+	a := New(llm, nil, nil, nil, nil, testLogger())
 	_, _ = a.HandleMessage(context.Background(), "Hi")
 
 	if len(a.history) <= 1 {

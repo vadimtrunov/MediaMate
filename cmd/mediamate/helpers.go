@@ -12,6 +12,7 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/config"
 	"github.com/vadimtrunov/MediaMate/internal/core"
 	"github.com/vadimtrunov/MediaMate/internal/llm/claude"
+	"github.com/vadimtrunov/MediaMate/internal/mediaserver/jellyfin"
 	"github.com/vadimtrunov/MediaMate/internal/metadata/tmdb"
 	"github.com/vadimtrunov/MediaMate/internal/torrent/qbittorrent"
 )
@@ -55,7 +56,9 @@ func initServices(cfg *config.Config, logger *slog.Logger) (*agent.Agent, error)
 		return nil, err
 	}
 
-	return agent.New(llmClient, tmdbClient, backend, torrentClient, logger), nil
+	mediaServer := initMediaServer(cfg, logger)
+
+	return agent.New(llmClient, tmdbClient, backend, torrentClient, mediaServer, logger), nil
 }
 
 // initLLM creates an LLM provider client based on the configured provider name.
@@ -96,6 +99,16 @@ func initTorrent(cfg *config.Config, logger *slog.Logger) (core.TorrentClient, e
 	}
 	logger.Info("qBittorrent client initialized", slog.String("url", sanitizeURL(cfg.QBittorrent.URL)))
 	return tc, nil
+}
+
+// initMediaServer creates a Jellyfin media server client if configured, or returns nil.
+func initMediaServer(cfg *config.Config, logger *slog.Logger) core.MediaServer {
+	if cfg.Jellyfin == nil {
+		return nil
+	}
+	ms := jellyfin.New(cfg.Jellyfin.URL, cfg.Jellyfin.APIKey, logger)
+	logger.Info("Jellyfin media server initialized", slog.String("url", sanitizeURL(cfg.Jellyfin.URL)))
+	return ms
 }
 
 // sanitizeURL strips credentials, query params, and fragment from a URL for safe logging.

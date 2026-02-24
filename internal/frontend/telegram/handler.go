@@ -79,6 +79,9 @@ func (b *Bot) handleMessage(ctx context.Context, msg *tgbotapi.Message) {
 
 // handleCallback processes inline keyboard callback queries.
 func (b *Bot) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery) {
+	if cq.Message == nil {
+		return
+	}
 	userID := cq.From.ID
 	chatID := cq.Message.Chat.ID
 
@@ -210,8 +213,8 @@ func (b *Bot) buildSelectionKeyboard(response string) *tgbotapi.InlineKeyboardMa
 		// Must be followed by ". " or ") ".
 		if (line[i] == '.' || line[i] == ')') && i+1 < len(line) && line[i+1] == ' ' {
 			label := line[i+2:]
-			if len(label) > maxButtonLabel {
-				label = label[:maxButtonLabel] + "…"
+			if len([]rune(label)) > maxButtonLabel {
+				label = string([]rune(label)[:maxButtonLabel]) + "…"
 			}
 			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(
 				fmt.Sprintf("%s. %s", num, label),

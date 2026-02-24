@@ -1,6 +1,9 @@
 package telegram
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestEscapeMdV2(t *testing.T) {
 	tests := []struct {
@@ -17,6 +20,7 @@ func TestEscapeMdV2(t *testing.T) {
 		{name: "stars", in: "*bold*", want: "\\*bold\\*"},
 		{name: "mixed", in: "Dune (2021) - 8.0*", want: "Dune \\(2021\\) \\- 8\\.0\\*"},
 		{name: "all specials", in: "_*[]()~`>#+-=|{}.!", want: "\\_\\*\\[\\]\\(\\)\\~\\`\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!"},
+		{name: "backslash", in: `path\to\file`, want: `path\\to\\file`},
 		{name: "empty", in: "", want: ""},
 	}
 	for _, tt := range tests {
@@ -74,6 +78,11 @@ func TestProgressBar(t *testing.T) {
 			// Check it starts with [ and contains ]
 			if got[0] != '[' {
 				t.Errorf("ProgressBar should start with [, got %q", got)
+			}
+			// Count filled blocks (█) to verify wantLen.
+			filled := strings.Count(got, "█")
+			if filled != tt.wantLen {
+				t.Errorf("expected %d filled blocks, got %d in %q", tt.wantLen, filled, got)
 			}
 		})
 	}

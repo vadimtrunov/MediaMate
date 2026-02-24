@@ -70,7 +70,7 @@ func (b *Bot) Start(ctx context.Context) error {
 			if !ok {
 				return nil
 			}
-			b.handleUpdate(ctx, update)
+			go b.handleUpdate(ctx, update)
 		}
 	}
 }

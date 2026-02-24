@@ -15,6 +15,12 @@ services:
     ports:
       - "7878:7878"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7878/api/v3/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -34,6 +40,12 @@ services:
     ports:
       - "8989:8989"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8989/api/v3/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -53,6 +65,12 @@ services:
     ports:
       - "8787:8787"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8787/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -70,6 +88,12 @@ services:
     ports:
       - "9696:9696"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9696/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -86,6 +110,12 @@ services:
     volumes:
       - ${CONFIG_DIR}/qbittorrent:/config
       - ${DOWNLOADS_DIR}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v2/app/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 {{- if .HasGluetun}}
     network_mode: "service:gluetun"
     restart: unless-stopped
@@ -113,6 +143,12 @@ services:
     volumes:
       - ${CONFIG_DIR}/transmission:/config
       - ${DOWNLOADS_DIR}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9091/transmission/web/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 {{- if .HasGluetun}}
     network_mode: "service:gluetun"
     restart: unless-stopped
@@ -139,6 +175,12 @@ services:
     volumes:
       - ${CONFIG_DIR}/deluge:/config
       - ${DOWNLOADS_DIR}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8112/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 {{- if .HasGluetun}}
     network_mode: "service:gluetun"
     restart: unless-stopped
@@ -169,6 +211,12 @@ services:
     ports:
       - "8096:8096"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8096/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -189,6 +237,12 @@ services:
     ports:
       - "32400:32400"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:32400/identity || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -222,6 +276,12 @@ services:
       - "6881:6881/udp"
 {{- end}}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/publicip/ip || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mediamate
 {{- end}}
@@ -240,25 +300,32 @@ services:
       - mediamate
     depends_on:
 {{- if .HasRadarr}}
-      - radarr
+      radarr:
+        condition: service_healthy
 {{- end}}
 {{- if .HasSonarr}}
-      - sonarr
+      sonarr:
+        condition: service_healthy
 {{- end}}
 {{- if .HasQBittorrent}}
-      - qbittorrent
+      qbittorrent:
+        condition: service_healthy
 {{- end}}
 {{- if .HasTransmission}}
-      - transmission
+      transmission:
+        condition: service_healthy
 {{- end}}
 {{- if .HasDeluge}}
-      - deluge
+      deluge:
+        condition: service_healthy
 {{- end}}
 {{- if .HasJellyfin}}
-      - jellyfin
+      jellyfin:
+        condition: service_healthy
 {{- end}}
 {{- if .HasPlex}}
-      - plex
+      plex:
+        condition: service_healthy
 {{- end}}
 
 networks:

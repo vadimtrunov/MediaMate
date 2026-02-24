@@ -136,7 +136,7 @@ mediamate config validate   # Config validation
 - [x] `internal/mediaserver/jellyfin/` — Jellyfin API
 - [x] Movie availability check
 - [x] Generating watch links
-- [ ] Webhook for new content notifications (deferred to Phase 7.3)
+- [ ] Webhook for new content notifications (deferred to Phase 5.1)
 
 ### 4.2 Docker Compose Stack ✅
 - [x] `mediamate stack init` — interactive wizard

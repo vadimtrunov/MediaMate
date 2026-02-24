@@ -302,7 +302,11 @@ func parseComposeServices(path string) ([]string, error) {
 
 		// A top-level key (no indent, ends with colon) after services:
 		// means we left the services block (e.g. "networks:").
+		// Skip YAML comments at column 0 — they are valid inside any block.
 		if inServices && line != "" && line[0] != ' ' && line[0] != '\t' {
+			if line[0] == '#' {
+				continue
+			}
 			break
 		}
 

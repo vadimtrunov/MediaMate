@@ -16,7 +16,7 @@ services:
       - "7878:7878"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:7878/api/v3/health); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:7878/api/v3/health) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,7 +41,7 @@ services:
       - "8989:8989"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8989/api/v3/health); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8989/api/v3/health) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -66,7 +66,7 @@ services:
       - "8787:8787"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8787/api/v1/health); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8787/api/v1/health) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -89,7 +89,7 @@ services:
       - "9696:9696"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9696/api/v1/health); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:9696/api/v1/health) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -111,7 +111,7 @@ services:
       - ${CONFIG_DIR}/qbittorrent:/config
       - ${DOWNLOADS_DIR}:/downloads
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v2/app/version); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8080/api/v2/app/version) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -144,7 +144,7 @@ services:
       - ${CONFIG_DIR}/transmission:/config
       - ${DOWNLOADS_DIR}:/downloads
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9091/transmission/web/); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:9091/transmission/web/) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -176,7 +176,7 @@ services:
       - ${CONFIG_DIR}/deluge:/config
       - ${DOWNLOADS_DIR}:/downloads
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8112/); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8112/) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -212,7 +212,7 @@ services:
       - "8096:8096"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8096/health); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8096/health) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -238,7 +238,7 @@ services:
       - "32400:32400"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:32400/identity); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:32400/identity) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -277,7 +277,7 @@ services:
 {{- end}}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/v1/publicip/ip); [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8000/v1/publicip/ip) && [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3

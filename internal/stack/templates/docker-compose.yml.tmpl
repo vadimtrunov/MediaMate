@@ -97,6 +97,27 @@ services:
     networks:
       - mediamate
 {{- end}}
+{{- if .HasFlareSolverr}}
+
+  flaresolverr:
+    image: {{.Images.FlareSolverr}}
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - TZ=${TZ:-Etc/UTC}
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8191/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - mediamate
+{{- end}}
 {{- if .HasQBittorrent}}
 
   qbittorrent:
@@ -298,6 +319,7 @@ services:
     restart: unless-stopped
     networks:
       - mediamate
+{{- if or .HasRadarr .HasSonarr .HasReadarr .HasProwlarr .HasQBittorrent .HasTransmission .HasDeluge .HasJellyfin .HasPlex .HasGluetun}}
     depends_on:
 {{- if .HasRadarr}}
       radarr:
@@ -338,6 +360,7 @@ services:
 {{- if .HasGluetun}}
       gluetun:
         condition: service_healthy
+{{- end}}
 {{- end}}
 
 networks:

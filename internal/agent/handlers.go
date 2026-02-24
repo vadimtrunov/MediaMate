@@ -9,6 +9,7 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/core"
 )
 
+// toolSearchMovie searches TMDb for movies matching the query and optional year filter.
 func (a *Agent) toolSearchMovie(ctx context.Context, args map[string]any) (string, error) {
 	if a.tmdb == nil {
 		return "", fmt.Errorf("TMDb client not configured")
@@ -40,6 +41,7 @@ func (a *Agent) toolSearchMovie(ctx context.Context, args map[string]any) (strin
 	return string(result), nil
 }
 
+// toolGetMovieDetails fetches detailed movie information from TMDb by ID.
 func (a *Agent) toolGetMovieDetails(ctx context.Context, args map[string]any) (string, error) {
 	if a.tmdb == nil {
 		return "", fmt.Errorf("TMDb client not configured")
@@ -62,6 +64,7 @@ func (a *Agent) toolGetMovieDetails(ctx context.Context, args map[string]any) (s
 	return string(result), nil
 }
 
+// toolDownloadMovie adds a movie to the download queue via the media backend.
 func (a *Agent) toolDownloadMovie(ctx context.Context, args map[string]any) (string, error) {
 	if a.backend == nil {
 		return "", fmt.Errorf("no media backend configured for downloading")
@@ -86,20 +89,30 @@ func (a *Agent) toolDownloadMovie(ctx context.Context, args map[string]any) (str
 		return "", fmt.Errorf("failed to add movie: %w", err)
 	}
 
-	return fmt.Sprintf(`{"status":"added","title":%q,"tmdb_id":%d}`, title, tmdbID), nil
+	resp := map[string]any{
+		"status":  "added",
+		"title":   title,
+		"tmdb_id": tmdbID,
+	}
+	result, err := json.Marshal(resp)
+	if err != nil {
+		return "", fmt.Errorf("marshal download response: %w", err)
+	}
+	return string(result), nil
 }
 
+// toolGetDownloadStatus checks the download status of a movie in the media backend.
 func (a *Agent) toolGetDownloadStatus(ctx context.Context, args map[string]any) (string, error) {
 	if a.backend == nil {
 		return "", fmt.Errorf("no media backend configured")
 	}
 
-	radarrID, ok := args["radarr_id"].(string)
-	if !ok || radarrID == "" {
-		return "", fmt.Errorf("get_download_status requires a 'radarr_id' string argument")
+	radarrIDInt, err := extractIntArg(args, "radarr_id")
+	if err != nil {
+		return "", err
 	}
 
-	status, err := a.backend.GetStatus(ctx, radarrID)
+	status, err := a.backend.GetStatus(ctx, strconv.Itoa(radarrIDInt))
 	if err != nil {
 		return "", fmt.Errorf("get status failed: %w", err)
 	}
@@ -111,6 +124,7 @@ func (a *Agent) toolGetDownloadStatus(ctx context.Context, args map[string]any) 
 	return string(result), nil
 }
 
+// toolRecommendSimilar fetches movie recommendations from TMDb based on a given movie ID.
 func (a *Agent) toolRecommendSimilar(ctx context.Context, args map[string]any) (string, error) {
 	if a.tmdb == nil {
 		return "", fmt.Errorf("TMDb client not configured")
@@ -133,6 +147,7 @@ func (a *Agent) toolRecommendSimilar(ctx context.Context, args map[string]any) (
 	return string(result), nil
 }
 
+// toolListDownloads returns all active torrent downloads as JSON.
 func (a *Agent) toolListDownloads(ctx context.Context, _ map[string]any) (string, error) {
 	if a.torrent == nil {
 		return "", fmt.Errorf("no torrent client configured")
@@ -150,6 +165,7 @@ func (a *Agent) toolListDownloads(ctx context.Context, _ map[string]any) (string
 	return string(result), nil
 }
 
+// extractIntArg extracts an integer argument from a tool call arguments map.
 func extractIntArg(args map[string]any, key string) (int, error) {
 	val, ok := args[key]
 	if !ok {
@@ -157,6 +173,9 @@ func extractIntArg(args map[string]any, key string) (int, error) {
 	}
 	switch v := val.(type) {
 	case float64:
+		if v != float64(int(v)) {
+			return 0, fmt.Errorf("%s must be an integer, got %g", key, v)
+		}
 		return int(v), nil
 	case int:
 		return v, nil

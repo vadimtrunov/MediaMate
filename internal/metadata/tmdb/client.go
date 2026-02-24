@@ -128,6 +128,7 @@ func PosterURL(posterPath, size string) string {
 	return imageBaseURL + size + posterPath
 }
 
+// get performs an authenticated GET request to the TMDb API and decodes the JSON response.
 func (c *Client) get(ctx context.Context, path string, params url.Values, result any) error {
 	u, err := url.Parse(c.baseURL + path)
 	if err != nil {

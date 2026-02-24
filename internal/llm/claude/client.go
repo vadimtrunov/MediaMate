@@ -106,6 +106,7 @@ func (c *Client) Chat(ctx context.Context, messages []core.Message, tools []core
 // Name returns "claude".
 func (c *Client) Name() string { return "claude" }
 
+// buildRequest constructs a Claude API request from core messages and tools.
 func (c *Client) buildRequest(messages []core.Message, tools []core.Tool) *request {
 	system, apiMsgs := convertMessages(messages)
 
@@ -123,8 +124,13 @@ func (c *Client) buildRequest(messages []core.Message, tools []core.Tool) *reque
 	return req
 }
 
+// parseError reads the response body and returns a structured error from the Claude API.
 func (c *Client) parseError(resp *http.Response) error {
-	body, _ := io.ReadAll(resp.Body)
+	const maxErrBody = 1 << 20 // 1 MiB
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxErrBody))
+	if err != nil {
+		return fmt.Errorf("claude API error %d: failed to read response body: %w", resp.StatusCode, err)
+	}
 
 	var errResp apiErrorResponse
 	if err := json.Unmarshal(body, &errResp); err == nil && errResp.Error.Message != "" {
@@ -184,6 +190,7 @@ func convertMessages(messages []core.Message) (string, []apiMessage) {
 	return system, apiMsgs
 }
 
+// buildToolUseMessage creates an assistant message with tool_use content blocks.
 func buildToolUseMessage(msg core.Message) apiMessage {
 	var blocks []contentBlock
 	if msg.Content != "" {

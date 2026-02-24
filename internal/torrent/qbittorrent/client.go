@@ -16,6 +16,7 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
 )
 
+// etaInfinity is the qBittorrent sentinel value indicating an unknown/infinite ETA.
 const etaInfinity = 8640000
 
 // Client implements core.TorrentClient for qBittorrent.
@@ -116,6 +117,7 @@ func (c *Client) Remove(ctx context.Context, hash string, deleteFiles bool) erro
 // Name returns "qbittorrent".
 func (c *Client) Name() string { return "qbittorrent" }
 
+// login authenticates with the qBittorrent Web API.
 func (c *Client) login(ctx context.Context) error {
 	data := url.Values{
 		"username": {c.username},
@@ -144,6 +146,7 @@ func (c *Client) login(ctx context.Context) error {
 	return nil
 }
 
+// ensureLoggedIn logs in to qBittorrent if not already authenticated.
 func (c *Client) ensureLoggedIn(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -154,6 +157,7 @@ func (c *Client) ensureLoggedIn(ctx context.Context) error {
 	return nil
 }
 
+// doWithAuth executes a request with authentication, re-logging in on 403.
 func (c *Client) doWithAuth(ctx context.Context, req *http.Request) (*http.Response, error) {
 	if err := c.ensureLoggedIn(ctx); err != nil {
 		return nil, err
@@ -191,6 +195,7 @@ func (c *Client) doWithAuth(ctx context.Context, req *http.Request) (*http.Respo
 	return c.http.Do(req)
 }
 
+// getJSON performs an authenticated GET request and decodes the JSON response.
 func (c *Client) getJSON(ctx context.Context, path string, params url.Values, result any) error {
 	u, err := url.Parse(c.baseURL + path)
 	if err != nil {
@@ -219,6 +224,7 @@ func (c *Client) getJSON(ctx context.Context, path string, params url.Values, re
 	return json.NewDecoder(resp.Body).Decode(result)
 }
 
+// postForm performs an authenticated POST request with form-encoded data.
 func (c *Client) postForm(ctx context.Context, path string, data url.Values) error {
 	body := data.Encode()
 	u := c.baseURL + path
@@ -244,6 +250,7 @@ func (c *Client) postForm(ctx context.Context, path string, data url.Values) err
 	return nil
 }
 
+// toTorrent converts a qBittorrent API torrent to a core.Torrent.
 func toTorrent(t qbitTorrent) core.Torrent {
 	eta := t.ETA
 	if eta >= etaInfinity {
@@ -262,6 +269,7 @@ func toTorrent(t qbitTorrent) core.Torrent {
 	}
 }
 
+// mapState maps qBittorrent's internal state strings to normalized status names.
 func mapState(state string) string {
 	switch state {
 	case "downloading", "forcedDL", "stalledDL", "metaDL", "allocating", "queuedDL", "checkingDL":

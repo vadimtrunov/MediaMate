@@ -58,6 +58,7 @@ type RootFolder struct {
 
 // DownloadClientConfig represents a download client configuration in Radarr.
 type DownloadClientConfig struct {
+	ID             int                   `json:"id,omitempty"`
 	Name           string                `json:"name"`
 	Implementation string                `json:"implementation"`
 	ConfigContract string                `json:"configContract"`

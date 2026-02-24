@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
@@ -281,9 +283,11 @@ func newStackSetupCmd() *cobra.Command {
 			// "stack init" rather than using hardcoded defaults.
 			cfg, err := stack.LoadConfigFromCompose(dir)
 			if err != nil {
-				logger.Warn("could not load config from compose files, falling back to defaults",
+				if !errors.Is(err, os.ErrNotExist) {
+					return fmt.Errorf("load config from %s: %w", dir, err)
+				}
+				logger.Warn("compose files not found, falling back to defaults",
 					slog.String("dir", dir),
-					slog.String("error", err.Error()),
 				)
 				cfg = stack.DefaultConfig()
 			}

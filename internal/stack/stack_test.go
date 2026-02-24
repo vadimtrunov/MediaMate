@@ -142,6 +142,26 @@ networks:
 	}
 }
 
+func TestParseComposeServices_SkipsColumnZeroComments(t *testing.T) {
+	dir := t.TempDir()
+	path := writeTestCompose(t, dir, "services:\n  radarr:\n    image: foo\n# a comment at column 0\n  sonarr:\n    image: bar\n")
+
+	components, err := parseComposeServices(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := []string{"radarr", "sonarr"}
+	if len(components) != len(want) {
+		t.Fatalf("got %v, want %v", components, want)
+	}
+	for i, c := range components {
+		if c != want[i] {
+			t.Errorf("component[%d] = %q, want %q", i, c, want[i])
+		}
+	}
+}
+
 // ---------------------------------------------------------------------------
 // 2. TestParseEnvFile
 // ---------------------------------------------------------------------------

@@ -50,13 +50,13 @@ func findDockerCompose() (string, error) {
 	return path, nil
 }
 
-// run executes a docker compose command with the given arguments and returns the
-// combined stdout/stderr output. The compose file is injected automatically via
-// the -f flag.
-func (c *Compose) run(ctx context.Context, args ...string) ([]byte, error) {
+// run executes a docker compose command with the given arguments. The compose
+// file is injected automatically via the -f flag. Combined stdout/stderr is
+// included in the error message on failure.
+func (c *Compose) run(ctx context.Context, args ...string) error {
 	dockerPath, err := findDockerCompose()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Build the full argument list: docker compose -f <file> <args...>
@@ -69,17 +69,16 @@ func (c *Compose) run(ctx context.Context, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, dockerPath, fullArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return output, fmt.Errorf("docker compose %s: %w: %s", strings.Join(args, " "), err, output)
+		return fmt.Errorf("docker compose %s: %w: %s", strings.Join(args, " "), err, output)
 	}
-	return output, nil
+	return nil
 }
 
 // Up starts all services defined in the compose file in detached mode.
 // If the command fails, the combined output is included in the error.
 func (c *Compose) Up(ctx context.Context) error {
 	c.logger.Info("starting stack", slog.String("file", c.file))
-	_, err := c.run(ctx, "up", "-d")
-	if err != nil {
+	if err := c.run(ctx, "up", "-d"); err != nil {
 		return fmt.Errorf("compose up: %w", err)
 	}
 	return nil
@@ -88,8 +87,7 @@ func (c *Compose) Up(ctx context.Context) error {
 // Down stops and removes all containers defined in the compose file.
 func (c *Compose) Down(ctx context.Context) error {
 	c.logger.Info("stopping stack", slog.String("file", c.file))
-	_, err := c.run(ctx, "down")
-	if err != nil {
+	if err := c.run(ctx, "down"); err != nil {
 		return fmt.Errorf("compose down: %w", err)
 	}
 	return nil
@@ -98,16 +96,31 @@ func (c *Compose) Down(ctx context.Context) error {
 // PS returns the status of all containers in the compose project. It parses
 // the JSON output of docker compose ps --format json, which emits one JSON
 // object per line (not a JSON array).
+//
+// Unlike Up/Down, PS captures stdout separately from stderr so that Docker
+// warnings or deprecation notices on stderr don't break JSON parsing.
 func (c *Compose) PS(ctx context.Context) ([]ContainerStatus, error) {
 	c.logger.Debug("listing containers", slog.String("file", c.file))
-	output, err := c.run(ctx, "ps", "--format", "json")
+
+	dockerPath, err := findDockerCompose()
 	if err != nil {
-		return nil, fmt.Errorf("compose ps: %w", err)
+		return nil, err
+	}
+
+	fullArgs := []string{"compose", "-f", c.file, "ps", "--format", "json"}
+	cmd := exec.CommandContext(ctx, dockerPath, fullArgs...)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compose ps: %w: %s", err, stderr.String())
 	}
 
 	var containers []ContainerStatus
 
-	scanner := bufio.NewScanner(bytes.NewReader(output))
+	scanner := bufio.NewScanner(&stdout)
 	for scanner.Scan() {
 		line := bytes.TrimSpace(scanner.Bytes())
 		if len(line) == 0 {

@@ -315,7 +315,7 @@ func newStackSetupCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&dir, "dir", ".", "directory containing generated stack files")
-	cmd.Flags().StringVar(&configDir, "config-dir", "", "config directory (default: /srv/mediamate/config)")
+	cmd.Flags().StringVar(&configDir, "config-dir", "", "config directory override (defaults to compose/.env or /srv/mediamate/config)")
 
 	return cmd
 }

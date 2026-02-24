@@ -74,6 +74,10 @@ func (sr *SetupRunner) Run(ctx context.Context) []SetupResult {
 
 	// Step 1: Wait for services to become healthy.
 	results = append(results, sr.waitForHealth(ctx)...)
+	if ctx.Err() != nil {
+		sr.logger.Warn("setup canceled", slog.String("reason", ctx.Err().Error()))
+		return results
+	}
 
 	// Step 2: Read API keys.
 	sr.logger.Info("reading API keys from config files")

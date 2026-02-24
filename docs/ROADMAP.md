@@ -140,7 +140,7 @@ mediamate config validate   # Config validation
 
 ### 4.2 Docker Compose Stack
 - [ ] `mediamate stack init` — interactive wizard
-  - Component selection (Radarr, Sonarr, Jellyfin, etc)
+  - Component selection (Radarr, Sonarr, Jellyfin, etc.)
   - Generate `docker-compose.yml`
   - Generate `.env` with secrets
 - [ ] `mediamate stack up` — start the stack

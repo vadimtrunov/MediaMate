@@ -1,53 +1,53 @@
 # Git Workflow Guide
 
-## Стандартный Git Flow
+## Standard Git Flow
 
-Используем упрощённую версию Git Flow с двумя основными ветками.
+We use a simplified version of Git Flow with two main branches.
 
 ---
 
-## Основные ветки
+## Main Branches
 
 ### `main` — Production
-- Всегда стабильная и готова к релизу
-- Прямые коммиты **запрещены**
-- Только через PR из `develop`
-- Каждый merge в main = релиз
+- Always stable and ready for release
+- Direct commits are **forbidden**
+- Only via PR from `develop`
+- Each merge to main = release
 
 ### `develop` — Development
-- Основная ветка разработки
-- Сюда мержатся feature ветки
-- Всегда рабочая, но может содержать новые фичи
-- От неё создаём feature branches
+- Main development branch
+- Feature branches are merged here
+- Always functional, but may contain new features
+- Feature branches are created from here
 
 ---
 
 ## Feature Branches
 
-### Создание feature ветки
+### Creating a feature branch
 
 ```bash
-# Убедись что на develop
+# Make sure you're on develop
 git checkout develop
 git pull origin develop
 
-# Создай feature ветку
+# Create a feature branch
 git checkout -b feat/llm-integration
-# или
+# or
 git checkout -b fix/config-validation
 ```
 
 ### Naming Convention
 
-**Префиксы:**
-- `feat/` — новая функциональность
-- `fix/` — баг фикс
-- `refactor/` — рефакторинг
-- `docs/` — документация
-- `test/` — тесты
-- `chore/` — инфраструктурные изменения
+**Prefixes:**
+- `feat/` — new functionality
+- `fix/` — bug fix
+- `refactor/` — refactoring
+- `docs/` — documentation
+- `test/` — tests
+- `chore/` — infrastructure changes
 
-**Примеры:**
+**Examples:**
 ```
 feat/claude-client
 feat/radarr-integration
@@ -58,13 +58,13 @@ test/integration-tests
 chore/update-deps
 ```
 
-### Работа над фичей
+### Working on a feature
 
 ```bash
-# Делай изменения
+# Make changes
 vim internal/llm/claude/client.go
 
-# Коммиты
+# Commits
 git add .
 git commit -m "feat(llm): add Claude API client
 
@@ -72,14 +72,14 @@ git commit -m "feat(llm): add Claude API client
 - Add retry logic with exponential backoff
 - Add context timeout support"
 
-# Пуш в remote
+# Push to remote
 git push origin feat/claude-client
 ```
 
-### Создание Pull Request
+### Creating a Pull Request
 
 ```bash
-# Создай PR в develop (не в main!)
+# Create PR to develop (not to main!)
 gh pr create --base develop --title "feat: Add Claude LLM integration" --body "
 ## What
 
@@ -103,53 +103,53 @@ Part of Phase 1 from roadmap.
 "
 ```
 
-### После PR Review
+### After PR Review
 
 ```bash
-# Если нужны изменения - просто коммить в ту же ветку
+# If changes are needed — just commit to the same branch
 git add .
 git commit -m "fix: address review comments"
 git push origin feat/claude-client
 
-# PR автоматически обновится
+# PR will be updated automatically
 ```
 
-### После Merge
+### After Merge
 
 ```bash
-# Переключись на develop
+# Switch to develop
 git checkout develop
 git pull origin develop
 
-# Удали локальную ветку
+# Delete local branch
 git branch -d feat/claude-client
 
-# Удали remote ветку (автоматически через GitHub обычно)
+# Delete remote branch (usually automatic via GitHub)
 git push origin --delete feat/claude-client
 ```
 
 ---
 
-## Релизы (main branch)
+## Releases (main branch)
 
-### Когда делать релиз
+### When to release
 
-Когда `develop` достиг milestone:
-- v0.1 — MVP готов
-- v0.2 — Новые фичи стабильны
+When `develop` reaches a milestone:
+- v0.1 — MVP is ready
+- v0.2 — New features are stable
 - v1.0 — Production ready
 
-### Процесс релиза
+### Release process
 
 ```bash
-# Убедись что develop стабильна
+# Make sure develop is stable
 git checkout develop
 git pull origin develop
 
-# Обнови версию в коде (если есть)
+# Update version in code (if applicable)
 # vim internal/version/version.go
 
-# Создай PR из develop в main
+# Create PR from develop to main
 gh pr create --base main --head develop --title "Release v0.1.0" --body "
 ## Release v0.1.0
 
@@ -165,7 +165,7 @@ gh pr create --base main --head develop --title "Release v0.1.0" --body "
 - [x] Manual testing on RPi5
 "
 
-# После merge в main - создай тэг
+# After merge to main — create a tag
 git checkout main
 git pull origin main
 git tag -a v0.1.0 -m "Release v0.1.0
@@ -175,29 +175,29 @@ git tag -a v0.1.0 -m "Release v0.1.0
 - Telegram + CLI frontends
 - Docker multi-arch build"
 
-# Пуш тэга
+# Push the tag
 git push origin v0.1.0
 
-# GitHub Actions автоматически:
-# - Запустит GoReleaser
-# - Создаст GitHub Release
-# - Соберёт бинарники
-# - Опубликует Docker образы
+# GitHub Actions will automatically:
+# - Run GoReleaser
+# - Create a GitHub Release
+# - Build binaries
+# - Publish Docker images
 ```
 
 ---
 
 ## Hotfix
 
-Если критический баг в production (main):
+If there is a critical bug in production (main):
 
 ```bash
-# Создай hotfix ветку от main
+# Create a hotfix branch from main
 git checkout main
 git pull origin main
 git checkout -b hotfix/critical-security-issue
 
-# Фикс
+# Fix
 vim internal/security/fix.go
 git add .
 git commit -m "fix(security): patch critical vulnerability
@@ -207,12 +207,12 @@ CVE-2024-XXXXX - SQL injection in search endpoint"
 # Push
 git push origin hotfix/critical-security-issue
 
-# PR в main (не в develop!)
+# PR to main (not to develop!)
 gh pr create --base main --title "hotfix: Critical security patch" --body "..."
 
-# После merge в main:
-# 1. Создай тэг (v0.1.1)
-# 2. Merge main обратно в develop
+# After merge to main:
+# 1. Create a tag (v0.1.1)
+# 2. Merge main back into develop
 git checkout develop
 git merge main
 git push origin develop
@@ -220,77 +220,77 @@ git push origin develop
 
 ---
 
-## Синхронизация с upstream
+## Syncing with upstream
 
-Если отстал develop от main:
+If develop is behind main:
 
 ```bash
 git checkout develop
 git pull origin develop
 git merge main
-# Разреши конфликты если есть
+# Resolve conflicts if any
 git push origin develop
 ```
 
 ---
 
-## Правила
+## Rules
 
-### ✅ DO:
-- Всегда создавай feature ветку от `develop`
-- Пиши понятные commit messages
-- PR только через GitHub (не direct push)
-- Squash коммиты если их слишком много
-- Удаляй merged ветки
-- Регулярно синкай с develop
+### DO:
+- Always create feature branches from `develop`
+- Write clear commit messages
+- PR only through GitHub (no direct push)
+- Squash commits if there are too many
+- Delete merged branches
+- Regularly sync with develop
 
-### ❌ DON'T:
-- Прямые коммиты в `main` или `develop`
-- Огромные PR (>500 строк лучше разбить)
-- PR без тестов
-- Merge своих PR без review (если проект не личный)
-- Force push в `main` или `develop`
+### DON'T:
+- Direct commits to `main` or `develop`
+- Huge PRs (>500 lines — better to split)
+- PRs without tests
+- Merge your own PRs without review (unless it's a personal project)
+- Force push to `main` or `develop`
 
 ---
 
 ## Useful Commands
 
 ```bash
-# Переключиться на develop
+# Switch to develop
 git checkout develop
 
-# Обновить develop
+# Update develop
 git pull origin develop
 
-# Создать feature ветку
+# Create a feature branch
 git checkout -b feat/my-feature
 
-# Статус
+# Status
 git status
 
-# Посмотреть изменения
+# View changes
 git diff
 
-# История
+# History
 git log --oneline --graph --all
 
-# Отменить незакоммиченные изменения
+# Discard uncommitted changes
 git checkout -- file.go
 
-# Мягкий reset последнего коммита
+# Soft reset of the last commit
 git reset --soft HEAD~1
 
-# Sync с remote
+# Sync with remote
 git fetch origin
 git status
 
-# Посмотреть все ветки
+# View all branches
 git branch -a
 
-# Удалить локальную ветку
+# Delete a local branch
 git branch -d feat/old-feature
 
-# Удалить remote ветку
+# Delete a remote branch
 git push origin --delete feat/old-feature
 ```
 
@@ -299,25 +299,25 @@ git push origin --delete feat/old-feature
 ## GitHub CLI Shortcuts
 
 ```bash
-# Создать PR
+# Create PR
 gh pr create
 
-# Посмотреть статус PR
+# View PR status
 gh pr status
 
-# Список PR
+# List PRs
 gh pr list
 
-# Checkout PR локально
+# Checkout PR locally
 gh pr checkout 123
 
 # Merge PR
 gh pr merge 123
 
-# Посмотреть Actions
+# View Actions
 gh run list
 
-# Посмотреть логи workflow
+# View workflow logs
 gh run view
 ```
 
@@ -325,7 +325,7 @@ gh run view
 
 ## Commit Message Format
 
-Используем Conventional Commits:
+We use Conventional Commits:
 
 ```
 <type>(<scope>): <subject>
@@ -336,19 +336,19 @@ gh run view
 ```
 
 **Types:**
-- `feat` — новая функциональность
-- `fix` — баг фикс
-- `refactor` — рефакторинг
-- `docs` — документация
-- `test` — тесты
-- `chore` — инфраструктура
-- `perf` — производительность
-- `style` — форматирование
+- `feat` — new functionality
+- `fix` — bug fix
+- `refactor` — refactoring
+- `docs` — documentation
+- `test` — tests
+- `chore` — infrastructure
+- `perf` — performance
+- `style` — formatting
 
-**Scope (опционально):**
+**Scope (optional):**
 - `llm`, `radarr`, `telegram`, `config`, etc.
 
-**Примеры:**
+**Examples:**
 
 ```bash
 feat(llm): add Claude API integration
@@ -392,27 +392,27 @@ develop (integration)
   └── fix/config-bug
 ```
 
-**Вся разработка идёт в feature ветках → PR в develop → релиз через PR в main**
+**All development happens in feature branches → PR to develop → release via PR to main**
 
 ---
 
 ## Next Steps
 
-1. Настрой branch protection для `main`:
+1. Set up branch protection for `main`:
    ```bash
-   # Требуем PR review
-   # Требуем прохождения CI
-   # Запрещаем force push
+   # Require PR review
+   # Require CI to pass
+   # Forbid force push
    ```
 
-2. Опционально: настрой auto-merge для dependabot PR
+2. Optionally: set up auto-merge for dependabot PRs
 
-3. Начинай работу над Phase 0 из roadmap!
+3. Start working on Phase 0 from the roadmap!
 
 ```bash
 git checkout develop
 git checkout -b feat/project-structure
-# ... код ...
+# ... code ...
 git commit -m "feat: add initial project structure"
 gh pr create --base develop
 ```

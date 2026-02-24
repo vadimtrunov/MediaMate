@@ -3,6 +3,7 @@ package stack
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -92,9 +93,25 @@ type GenerateResult struct {
 	ConfigPath  string
 }
 
+// checkNoExistingFiles returns an error if any of the given paths already exist.
+func checkNoExistingFiles(paths []string) error {
+	for _, p := range paths {
+		if _, err := os.Stat(p); err == nil {
+			return fmt.Errorf("file already exists: %s (use --overwrite to replace)", p)
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("stat %s: %w", p, err)
+		}
+	}
+	return nil
+}
+
 // Generate produces all stack files in the configured output directory.
 // It returns an error if any file already exists and overwrite is false.
 func (g *Generator) Generate(cfg *Config, overwrite bool) (*GenerateResult, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config is nil")
+	}
+
 	secrets, err := GenerateSecrets(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("generate secrets: %w", err)
@@ -110,12 +127,9 @@ func (g *Generator) Generate(cfg *Config, overwrite bool) (*GenerateResult, erro
 	envPath := filepath.Join(cfg.OutputDir, ".env")
 	configPath := filepath.Join(cfg.OutputDir, "mediamate.yaml")
 
-	paths := []string{composePath, envPath, configPath}
 	if !overwrite {
-		for _, p := range paths {
-			if _, err := os.Stat(p); err == nil {
-				return nil, fmt.Errorf("file already exists: %s (use --overwrite to replace)", p)
-			}
+		if err := checkNoExistingFiles([]string{composePath, envPath, configPath}); err != nil {
+			return nil, err
 		}
 	}
 
@@ -160,7 +174,9 @@ func (g *Generator) renderTemplate(name string, data any) ([]byte, error) {
 		return nil, fmt.Errorf("read template %s: %w", name, err)
 	}
 
-	tmpl, err := template.New(filepath.Base(name)).Parse(string(tmplContent))
+	tmpl, err := template.New(filepath.Base(name)).
+		Option("missingkey=error").
+		Parse(string(tmplContent))
 	if err != nil {
 		return nil, fmt.Errorf("parse template %s: %w", name, err)
 	}
@@ -182,6 +198,9 @@ func (g *Generator) writeFile(path string, data []byte, perm os.FileMode) error 
 	}
 	if err := os.WriteFile(path, data, perm); err != nil {
 		return fmt.Errorf("write file %s: %w", path, err)
+	}
+	if err := os.Chmod(path, perm); err != nil {
+		return fmt.Errorf("chmod file %s: %w", path, err)
 	}
 	return nil
 }

@@ -155,7 +155,11 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.textinput.Width = msg.Width - 4
+		w := msg.Width - 4
+		if w < 0 {
+			w = 0
+		}
+		m.textinput.Width = w
 		return m, nil
 
 	case tea.KeyMsg:

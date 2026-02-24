@@ -246,6 +246,27 @@ services:
     networks:
       - mediamate
 {{- end}}
+{{- if .HasFlareSolverr}}
+
+  flaresolverr:
+    image: {{.Images.FlareSolverr}}
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - TZ=${TZ:-Etc/UTC}
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8191/health) && [ \"$code\" -lt 500 ]"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - mediamate
+{{- end}}
 {{- if .HasGluetun}}
 
   gluetun:
@@ -277,7 +298,7 @@ services:
 {{- end}}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8000/v1/publicip/ip) && [ \"$code\" -lt 500 ]"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8000/v1/publicip/ip || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -298,7 +319,7 @@ services:
     restart: unless-stopped
     networks:
       - mediamate
-{{- if or .HasRadarr .HasSonarr .HasReadarr .HasProwlarr .HasQBittorrent .HasTransmission .HasDeluge .HasJellyfin .HasPlex .HasGluetun}}
+{{- if or .HasRadarr .HasSonarr .HasReadarr .HasProwlarr .HasQBittorrent .HasTransmission .HasDeluge .HasJellyfin .HasPlex .HasGluetun .HasFlareSolverr}}
     depends_on:
 {{- if .HasRadarr}}
       radarr:
@@ -338,6 +359,10 @@ services:
 {{- end}}
 {{- if .HasGluetun}}
       gluetun:
+        condition: service_healthy
+{{- end}}
+{{- if .HasFlareSolverr}}
+      flaresolverr:
         condition: service_healthy
 {{- end}}
 {{- end}}

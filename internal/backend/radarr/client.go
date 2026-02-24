@@ -165,6 +165,51 @@ func (c *Client) resolveRootFolder(ctx context.Context) (string, error) {
 	return folders[0].Path, nil
 }
 
+// ListQualityProfiles returns all quality profiles configured in Radarr.
+func (c *Client) ListQualityProfiles(ctx context.Context) ([]QualityProfile, error) {
+	var profiles []QualityProfile
+	if err := c.get(ctx, "/api/v3/qualityprofile", nil, &profiles); err != nil {
+		return nil, fmt.Errorf("radarr list quality profiles: %w", err)
+	}
+	return profiles, nil
+}
+
+// ListRootFolders returns all root folders configured in Radarr.
+func (c *Client) ListRootFolders(ctx context.Context) ([]RootFolder, error) {
+	var folders []RootFolder
+	if err := c.get(ctx, "/api/v3/rootfolder", nil, &folders); err != nil {
+		return nil, fmt.Errorf("radarr list root folders: %w", err)
+	}
+	return folders, nil
+}
+
+// CreateRootFolder creates a new root folder in Radarr.
+func (c *Client) CreateRootFolder(ctx context.Context, path string) (*RootFolder, error) {
+	body := map[string]string{"path": path}
+	var folder RootFolder
+	if err := c.post(ctx, "/api/v3/rootfolder", body, &folder); err != nil {
+		return nil, fmt.Errorf("radarr create root folder: %w", err)
+	}
+	return &folder, nil
+}
+
+// AddDownloadClient adds a download client configuration to Radarr.
+func (c *Client) AddDownloadClient(ctx context.Context, cfg DownloadClientConfig) error {
+	if err := c.post(ctx, "/api/v3/downloadclient", cfg, nil); err != nil {
+		return fmt.Errorf("radarr add download client: %w", err)
+	}
+	return nil
+}
+
+// ListDownloadClients returns all download clients configured in Radarr.
+func (c *Client) ListDownloadClients(ctx context.Context) ([]DownloadClientConfig, error) {
+	var clients []DownloadClientConfig
+	if err := c.get(ctx, "/api/v3/downloadclient", nil, &clients); err != nil {
+		return nil, fmt.Errorf("radarr list download clients: %w", err)
+	}
+	return clients, nil
+}
+
 // get performs an authenticated GET request to the Radarr API and decodes the JSON response.
 func (c *Client) get(ctx context.Context, path string, params url.Values, result any) error {
 	u, err := url.Parse(c.baseURL + path)

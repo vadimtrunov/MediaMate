@@ -13,7 +13,7 @@ We build incrementally — each phase is a fully working product. Start with the
 - [x] Define packages: `cmd/`, `internal/`, `pkg/`
 - [x] Set up CI/CD (GitHub Actions)
 - [x] Makefile for builds
-- [ ] Docker multi-stage build for ARM64 and AMD64
+- [ ] Docker multi-stage build for ARM64 and AMD64 (→ Phase 7.3)
 
 ### 0.2 Core Interfaces ✅
 ```go
@@ -46,7 +46,7 @@ type Frontend interface {}
 - [x] `internal/llm/claude/` — Claude API client
 - [x] Tool calling support (Claude function calling)
 - [x] Retry logic and error handling
-- [ ] Rate limiting
+- [ ] Rate limiting (→ Phase 7.4)
 - [x] Tests with mock LLM
 
 **Tools for Claude:**
@@ -95,7 +95,7 @@ type Frontend interface {}
 - [x] `cmd/mediamate/chat.go` — interactive chat in terminal
 - [x] Message history (arrows up/down)
 - [x] Beautiful output (bubbles/lipgloss)
-- [ ] Streaming responses from LLM
+- [ ] Streaming responses from LLM (→ Phase 7.4)
 - [x] Colored output (movies, statuses)
 
 ### 2.2 CLI Commands ✅
@@ -123,7 +123,7 @@ mediamate config validate   # Config validation
 ### 3.2 Rich Media ✅
 - [x] Sending movie posters
 - [x] Recommendation formatting (Markdown)
-- [ ] Progress bars for downloads
+- [ ] Progress bars for downloads (→ Phase 5.2)
 - [x] Callback buttons (download 1/2/3)
 
 **Deliverable:** v0.1 — Full MVP with Telegram + CLI
@@ -138,121 +138,129 @@ mediamate config validate   # Config validation
 - [x] Generating watch links
 - [ ] Webhook for new content notifications (deferred to Phase 7.3)
 
-### 4.2 Docker Compose Stack
-- [ ] `mediamate stack init` — interactive wizard
+### 4.2 Docker Compose Stack ✅
+- [x] `mediamate stack init` — interactive wizard
   - Component selection (Radarr, Sonarr, Jellyfin, etc.)
   - Generate `docker-compose.yml`
   - Generate `.env` with secrets
-- [ ] `mediamate stack up` — start the stack
-- [ ] `mediamate stack down` — stop the stack
-- [ ] Health checks for all services
+- [x] `mediamate stack up` — start the stack
+- [x] `mediamate stack down` — stop the stack
+- [x] Health checks for all services
 
-### 4.3 Setup Wizard
-- [ ] Automatic Radarr setup (quality profiles, root folders)
-- [ ] Automatic Prowlarr + indexers setup
-- [ ] Linking Radarr <-> Prowlarr <-> qBittorrent
-- [ ] Connection tests
+### 4.3 Setup Wizard ✅
+- [x] Automatic Radarr setup (root folders, download client)
+- [x] Automatic Prowlarr setup (application, download client, indexer proxy)
+- [x] Linking Radarr <-> Prowlarr <-> qBittorrent
+- [x] Health check polling before configuration
+- [x] API key extraction from config.xml files
+- [x] Auto-update .env and mediamate.yaml with real API keys
+- [x] qBittorrent save path configuration
+- [x] Idempotent operations (skip if already configured)
 
 **Deliverable:** `mediamate stack init` → fully working stack in 5 minutes
 
 ---
 
-## Phase 5: Sonarr & Readarr (Week 11-12)
+## Phase 5: Notifications
 
-### 5.1 Sonarr Support
+### 5.1 Download Notifications
+- [ ] Webhook endpoint for Radarr/Sonarr events
+- [ ] Telegram notification: "Interstellar is ready to watch!"
+- [ ] Direct link to Jellyfin
+
+### 5.2 Download Progress
+- [ ] Progress bars for active downloads in Telegram
+- [ ] Periodic status updates
+
+**Deliverable:** End-to-end flow — request movie → get notified when ready
+
+---
+
+## Phase 6: Sonarr & Readarr
+
+### 6.1 Sonarr Support
 - [ ] `internal/backend/sonarr/` — Sonarr API client
 - [ ] TV show search
 - [ ] Season/episode monitoring
 - [ ] Update LLM tools for TV shows
 
-### 5.2 Readarr Support
+### 6.2 Readarr Support
 - [ ] `internal/backend/readarr/` — Readarr API client
 - [ ] Book search
 - [ ] E-book formats (epub, mobi, pdf)
 
-### 5.3 Unified Search
+### 6.3 Unified Search
 - [ ] LLM determines content type (movie/show/book)
 - [ ] Unified search interface
 - [ ] Result prioritization
 
-**Deliverable:** v0.2 — Support for movies, TV shows, books
+**Deliverable:** Support for movies, TV shows, books
 
 ---
 
-## Phase 6: Alternative Providers (Week 13-14)
+## Phase 7: Polish & Release
 
-### 6.1 OpenAI Support
-- [ ] `internal/llm/openai/` — OpenAI client
-- [ ] GPT-4 Turbo function calling
-- [ ] Switching via config
-
-### 6.2 Ollama Support
-- [ ] `internal/llm/ollama/` — Ollama client
-- [ ] Local models (Llama 3, Mistral)
-- [ ] Auto-detection of available models
-
-### 6.3 Alternative Torrent Clients
-- [ ] `internal/torrent/transmission/`
-- [ ] `internal/torrent/deluge/`
-- [ ] Unified `TorrentClient` interface
-
-**Deliverable:** v0.3 — Flexible component selection
-
----
-
-## Phase 7: Advanced Features (Week 15-16)
-
-### 7.1 Conversation History
-- [ ] SQLite for history storage
-- [ ] Previous request context
-- [ ] "Remember, I asked you to download that movie?" → LLM searches history
-
-### 7.2 Claude OAuth
-- [ ] Authorization via Claude.ai subscription
-- [ ] Reduced costs for users with a subscription
-
-### 7.3 Notifications
-- [ ] Webhook from Radarr/Sonarr when download completes
-- [ ] Telegram notification: "Interstellar is ready to watch!"
-- [ ] Direct link to Jellyfin
-
-### 7.4 Smart Recommendations
-- [ ] Personal recommendations based on history
-- [ ] "What to watch tonight?" → analysis of likes/dislikes
-- [ ] Integration with Jellyfin viewing history
-
-**Deliverable:** v0.4 — Smart assistant with memory
-
----
-
-## Phase 8: Polish & Release (Week 17-20)
-
-### 8.1 Testing
+### 7.1 Testing
 - [ ] Unit tests (>80% coverage)
 - [ ] Integration tests with mock API
 - [ ] End-to-end tests in Docker
 - [ ] Tests on ARM64 (Raspberry Pi 5)
 
-### 8.2 Documentation
+### 7.2 Documentation
 - [ ] Docs site (Hugo/MkDocs)
 - [ ] Step-by-step guides
 - [ ] API reference
 - [ ] Troubleshooting
-- [ ] Video demos
 
-### 8.3 Install Script
+### 7.3 Install Script
 - [ ] One-liner install: `curl ... | bash`
 - [ ] Auto-detection of ARM64/AMD64
 - [ ] Systemd service
-- [ ] Auto-updates
+- [ ] Docker multi-stage build for ARM64 and AMD64
 
-### 8.4 Performance
-- [ ] Benchmarks for LLM response time
+### 7.4 Performance
 - [ ] Memory optimization (important for RPi)
 - [ ] Parallel API requests
 - [ ] Graceful shutdown
 
 **Deliverable:** v1.0 — Production-ready release
+
+---
+
+## Phase 8: Advanced Features
+
+### 8.1 Conversation History
+- [ ] SQLite for history storage
+- [ ] Previous request context
+- [ ] "Remember, I asked you to download that movie?" → LLM searches history
+
+### 8.2 Smart Recommendations
+- [ ] Personal recommendations based on history
+- [ ] "What to watch tonight?" → analysis of likes/dislikes
+- [ ] Integration with Jellyfin viewing history
+
+**Deliverable:** Smart assistant with memory
+
+---
+
+## Phase 9: Alternative Providers
+
+### 9.1 OpenAI Support
+- [ ] `internal/llm/openai/` — OpenAI client
+- [ ] GPT-4 function calling
+- [ ] Switching via config
+
+### 9.2 Ollama Support
+- [ ] `internal/llm/ollama/` — Ollama client
+- [ ] Local models (Llama 3, Mistral)
+- [ ] Auto-detection of available models
+
+### 9.3 Alternative Torrent Clients
+- [ ] `internal/torrent/transmission/`
+- [ ] `internal/torrent/deluge/`
+- [ ] Unified `TorrentClient` interface
+
+**Deliverable:** Flexible component selection
 
 ---
 
@@ -279,6 +287,10 @@ mediamate config validate   # Config validation
 ### Subtitle Management
 - Bazarr integration
 - Automatic subtitle download in the desired language
+
+### Claude OAuth
+- Authorization via Claude.ai subscription
+- Reduced costs for users with a subscription
 
 ---
 
@@ -330,12 +342,11 @@ mediamate config validate   # Config validation
 
 ## Timeline
 
-- **Weeks 1-8:** MVP (v0.1) — Claude + Radarr + Telegram
-- **Weeks 9-12:** Core features (v0.2) — Sonarr, Readarr, Jellyfin
-- **Weeks 13-16:** Alternative providers (v0.3-v0.4)
-- **Weeks 17-20:** Polish & release (v1.0)
-
-**Total:** ~5 months to v1.0
+- **Phases 0-4:** MVP (v0.1) — Claude + Radarr + Telegram + Jellyfin + Stack ✅
+- **Phase 5:** Notifications — download complete → Telegram alert
+- **Phase 6:** Sonarr & Readarr — TV shows and books
+- **Phase 7:** Polish & release (v1.0) — tests, docs, install script
+- **Phase 8-9:** Advanced features & alternative providers
 
 ---
 

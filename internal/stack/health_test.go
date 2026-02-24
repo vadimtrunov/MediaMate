@@ -2,7 +2,9 @@ package stack
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -82,9 +84,17 @@ func TestCheckServiceWithServer(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCheckServiceUnreachable(t *testing.T) {
-	// Use a port that nothing listens on.
+	// Bind to an ephemeral port, then close the listener to guarantee nothing
+	// listens on it during the test. This avoids hardcoded port conflicts in CI.
+	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("allocate ephemeral port: %v", err)
+	}
+	port := ln.Addr().(*net.TCPAddr).Port
+	ln.Close()
+
 	const testService = "unreachable-service"
-	serviceEndpoints[testService] = ":19999/health"
+	serviceEndpoints[testService] = fmt.Sprintf(":%d/health", port)
 	defer delete(serviceEndpoints, testService)
 
 	hc := newTestHealthChecker(t, "http://127.0.0.1")

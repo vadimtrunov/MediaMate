@@ -117,6 +117,31 @@ func (c *Client) Remove(ctx context.Context, hash string, deleteFiles bool) erro
 // Name returns "qbittorrent".
 func (c *Client) Name() string { return "qbittorrent" }
 
+// GetPreferences returns the current qBittorrent application preferences.
+func (c *Client) GetPreferences(ctx context.Context) (*Preferences, error) {
+	var prefs Preferences
+	if err := c.getJSON(ctx, "/api/v2/app/preferences", nil, &prefs); err != nil {
+		return nil, fmt.Errorf("get preferences: %w", err)
+	}
+	return &prefs, nil
+}
+
+// SetPreferences updates qBittorrent application preferences.
+// The prefs map is JSON-encoded and sent as form data with key "json",
+// matching the qBittorrent Web API requirement.
+func (c *Client) SetPreferences(ctx context.Context, prefs map[string]any) error {
+	if prefs == nil {
+		prefs = make(map[string]any)
+	}
+	jsonBytes, err := json.Marshal(prefs)
+	if err != nil {
+		return fmt.Errorf("marshal preferences: %w", err)
+	}
+	return c.postForm(ctx, "/api/v2/app/setPreferences", url.Values{
+		"json": {string(jsonBytes)},
+	})
+}
+
 // login authenticates with the qBittorrent Web API.
 func (c *Client) login(ctx context.Context) error {
 	data := url.Values{

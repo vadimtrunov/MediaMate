@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -27,6 +28,7 @@ func newStackCmd() *cobra.Command {
 	cmd.AddCommand(newStackUpCmd())
 	cmd.AddCommand(newStackDownCmd())
 	cmd.AddCommand(newStackStatusCmd())
+	cmd.AddCommand(newStackSetupCmd())
 
 	return cmd
 }
@@ -117,8 +119,8 @@ func generateStackFiles(cfg *stack.Config, overwrite bool) error {
 	fmt.Printf("  %s %s\n", styleInfo.Render("Config:        "), result.ConfigPath)
 	fmt.Println()
 	fmt.Println(styleDim.Render("Next steps:"))
-	fmt.Println(styleDim.Render("  1. Edit .env and fill in your API keys"))
-	fmt.Println(styleDim.Render("  2. Run: mediamate stack up"))
+	fmt.Println(styleDim.Render("  1. Run: mediamate stack up"))
+	fmt.Println(styleDim.Render("  2. Run: mediamate stack setup  (auto-configure services)"))
 	fmt.Println(styleDim.Render("  3. Run: mediamate chat"))
 
 	return nil
@@ -223,10 +225,10 @@ func newStackStatusCmd() *cobra.Command {
 // the list of service names for subsequent health probing.
 func printContainerStatus(containers []stack.ContainerStatus) []string {
 	fmt.Println(styleHeader.Render("Container Status"))
-	fmt.Printf("  %-20s %-12s %-12s %s\n",
-		styleDim.Render("SERVICE"),
-		styleDim.Render("STATE"),
-		styleDim.Render("HEALTH"),
+	fmt.Printf("  %s %s %s %s\n",
+		styleDim.Render(fmt.Sprintf("%-20s", "SERVICE")),
+		styleDim.Render(fmt.Sprintf("%-12s", "STATE")),
+		styleDim.Render(fmt.Sprintf("%-12s", "HEALTH")),
 		styleDim.Render("STATUS"),
 	)
 
@@ -242,9 +244,9 @@ func printContainerStatus(containers []stack.ContainerStatus) []string {
 			healthStr = "-"
 		}
 
-		fmt.Printf("  %-20s %-12s %-12s %s\n",
+		fmt.Printf("  %-20s %s %-12s %s\n",
 			c.Service,
-			stateStyle.Render(c.State),
+			stateStyle.Render(fmt.Sprintf("%-12s", c.State)),
 			healthStr,
 			c.Status,
 		)
@@ -253,6 +255,96 @@ func printContainerStatus(containers []stack.ContainerStatus) []string {
 	}
 
 	return serviceNames
+}
+
+// newStackSetupCmd returns the "stack setup" sub-command.
+func newStackSetupCmd() *cobra.Command {
+	var (
+		dir       string
+		configDir string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "setup",
+		Short: "Auto-configure running stack services",
+		Long: "Read API keys from service configs and automatically set up\n" +
+			"Radarr, Prowlarr, and qBittorrent connections.\n\n" +
+			"Run this after 'mediamate stack up' to configure all services.",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+			defer stop()
+
+			logger := slog.Default()
+
+			// Load config from the generated docker-compose.yml and .env so
+			// that the setup respects the user's component selections from
+			// "stack init" rather than using hardcoded defaults.
+			cfg, err := stack.LoadConfigFromCompose(dir)
+			if err != nil {
+				logger.Warn("could not load config from compose files, falling back to defaults",
+					slog.String("dir", dir),
+					slog.String("error", err.Error()),
+				)
+				cfg = stack.DefaultConfig()
+			}
+
+			if configDir != "" {
+				cfg.ConfigDir = configDir
+			}
+
+			// Build a GenerateResult pointing to files in the specified directory.
+			genResult := &stack.GenerateResult{
+				ComposePath: filepath.Join(dir, "docker-compose.yml"),
+				EnvPath:     filepath.Join(dir, ".env"),
+				ConfigPath:  filepath.Join(dir, "mediamate.yaml"),
+			}
+
+			fmt.Println(styleInfo.Render("Running auto-setup..."))
+			fmt.Println()
+
+			runner := stack.NewSetupRunner(&cfg, genResult, logger)
+			results := runner.Run(ctx)
+
+			printSetupResults(results)
+			return checkSetupFailures(results)
+		},
+	}
+
+	cmd.Flags().StringVar(&dir, "dir", ".", "directory containing generated stack files")
+	cmd.Flags().StringVar(&configDir, "config-dir", "", "config directory (default: /srv/mediamate/config)")
+
+	return cmd
+}
+
+// checkSetupFailures returns an error if any setup result indicates failure.
+func checkSetupFailures(results []stack.SetupResult) error {
+	for _, r := range results {
+		if !r.OK {
+			return fmt.Errorf("one or more setup steps failed")
+		}
+	}
+	return nil
+}
+
+// printSetupResults prints a formatted table of setup outcomes.
+func printSetupResults(results []stack.SetupResult) {
+	fmt.Println(styleHeader.Render("Setup Results"))
+	for _, r := range results {
+		indicator := styleSuccess.Render("OK")
+		detail := ""
+		if !r.OK {
+			indicator = styleError.Render("FAIL")
+			detail = styleDim.Render("  " + r.Error)
+		}
+
+		fmt.Printf("  %-20s %-30s %s%s\n",
+			r.Service,
+			r.Action,
+			indicator,
+			detail,
+		)
+	}
+	fmt.Println()
 }
 
 // printHealthProbes runs HTTP health probes against the given services and
@@ -279,12 +371,12 @@ func printHealthProbes(ctx context.Context, serviceNames []string, logger *slog.
 			latencyStr = "-"
 		}
 
-		indicator := styleSuccess.Render("OK")
+		indicator := styleSuccess.Render(fmt.Sprintf("%-6s", "OK"))
 		if !r.Healthy {
-			indicator = styleError.Render("FAIL")
+			indicator = styleError.Render(fmt.Sprintf("%-6s", "FAIL"))
 		}
 
-		fmt.Printf("  %-20s %-6s  %-6s  %s\n",
+		fmt.Printf("  %-20s %s  %-6s  %s\n",
 			r.Name,
 			indicator,
 			statusStr,

@@ -4,6 +4,16 @@
 // setup wizard.
 package stack
 
+import (
+	"bufio"
+	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+)
+
 // Component name constants used throughout the stack configuration.
 const (
 	ComponentRadarr       = "radarr"
@@ -16,6 +26,7 @@ const (
 	ComponentJellyfin     = "jellyfin"
 	ComponentPlex         = "plex"
 	ComponentGluetun      = "gluetun"
+	ComponentFlareSolverr = "flaresolverr"
 	ComponentMediaMate    = "mediamate"
 )
 
@@ -31,6 +42,7 @@ var dockerImages = map[string]string{
 	ComponentJellyfin:     "lscr.io/linuxserver/jellyfin:latest",
 	ComponentPlex:         "lscr.io/linuxserver/plex:latest",
 	ComponentGluetun:      "qmcgaw/gluetun:latest",
+	ComponentFlareSolverr: "ghcr.io/flaresolverr/flaresolverr:latest",
 	ComponentMediaMate:    "ghcr.io/vadimtrunov/mediamate:latest",
 }
 
@@ -172,4 +184,193 @@ func (c *Config) HasComponent(name string) bool {
 		}
 	}
 	return false
+}
+
+// knownComponents is the set of valid component names. Used by
+// LoadConfigFromCompose to filter service names from docker-compose.yml.
+var knownComponents = map[string]bool{
+	ComponentRadarr:       true,
+	ComponentSonarr:       true,
+	ComponentReadarr:      true,
+	ComponentProwlarr:     true,
+	ComponentQBittorrent:  true,
+	ComponentTransmission: true,
+	ComponentDeluge:       true,
+	ComponentJellyfin:     true,
+	ComponentPlex:         true,
+	ComponentGluetun:      true,
+	ComponentFlareSolverr: true,
+	ComponentMediaMate:    true,
+}
+
+// torrentComponents lists all torrent client component names.
+var torrentComponents = map[string]bool{
+	ComponentQBittorrent:  true,
+	ComponentTransmission: true,
+	ComponentDeluge:       true,
+}
+
+// mediaServerComponents lists all media server component names.
+var mediaServerComponents = map[string]bool{
+	ComponentJellyfin: true,
+	ComponentPlex:     true,
+}
+
+// serviceNameRe matches a top-level service definition in docker-compose.yml.
+// It matches lines like "  radarr:" (exactly two spaces of indent followed by
+// a service name and a colon).
+var serviceNameRe = regexp.MustCompile(`^ {2}(\w[\w-]*):\s*$`)
+
+// LoadConfigFromCompose reads a docker-compose.yml and .env file from dir and
+// returns a Config whose Components list reflects the actual services defined
+// in the compose file. Directory paths are read from the .env file; any
+// missing values fall back to DefaultConfig defaults.
+func LoadConfigFromCompose(dir string) (Config, error) {
+	composePath := filepath.Join(dir, "docker-compose.yml")
+	envPath := filepath.Join(dir, ".env")
+
+	// Start from defaults so any missing values are populated.
+	cfg := DefaultConfig()
+
+	// --- Parse docker-compose.yml for service names ---
+	components, err := parseComposeServices(composePath)
+	if err != nil {
+		return Config{}, fmt.Errorf("load config from compose: %w", err)
+	}
+
+	cfg.Components = components
+
+	// Derive TorrentClient and MediaServer from the component list.
+	cfg.TorrentClient = ""
+	for _, c := range components {
+		if torrentComponents[c] {
+			cfg.TorrentClient = c
+			break
+		}
+	}
+	cfg.MediaServer = ""
+	for _, c := range components {
+		if mediaServerComponents[c] {
+			cfg.MediaServer = c
+			break
+		}
+	}
+
+	// --- Parse .env for directory paths ---
+	envVars, err := parseEnvFile(envPath)
+	if err != nil {
+		// .env is optional; log and continue with defaults.
+		slog.Debug("could not read .env file, using default paths",
+			slog.String("path", envPath),
+			slog.String("error", err.Error()),
+		)
+		return cfg, nil
+	}
+
+	applyEnvDir(envVars, "CONFIG_DIR", &cfg.ConfigDir)
+	applyEnvDir(envVars, "MOVIES_DIR", &cfg.MoviesDir)
+	applyEnvDir(envVars, "DOWNLOADS_DIR", &cfg.DownloadsDir)
+	applyEnvDir(envVars, "TV_DIR", &cfg.TVDir)
+	applyEnvDir(envVars, "BOOKS_DIR", &cfg.BooksDir)
+	applyEnvDir(envVars, "MEDIA_DIR", &cfg.MediaDir)
+
+	return cfg, nil
+}
+
+// parseComposeServices reads a docker-compose.yml file and extracts the
+// top-level service names. It skips the "mediamate" service itself and only
+// returns names that are known components.
+func parseComposeServices(path string) ([]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("open %s: %w", path, err)
+	}
+	defer f.Close()
+
+	var components []string
+	inServices := false
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Detect the start of the services block.
+		if strings.TrimSpace(line) == "services:" {
+			inServices = true
+			continue
+		}
+
+		// A top-level key (no indent, ends with colon) after services:
+		// means we left the services block (e.g. "networks:").
+		if inServices && line != "" && line[0] != ' ' && line[0] != '\t' {
+			break
+		}
+
+		if !inServices {
+			continue
+		}
+
+		// Match service names (exactly 2-space indent).
+		matches := serviceNameRe.FindStringSubmatch(line)
+		if matches == nil {
+			continue
+		}
+
+		name := matches[1]
+		if name == ComponentMediaMate {
+			continue
+		}
+		if knownComponents[name] {
+			components = append(components, name)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("scan %s: %w", path, err)
+	}
+
+	if len(components) == 0 {
+		return nil, fmt.Errorf("no known services found in %s", path)
+	}
+
+	return components, nil
+}
+
+// parseEnvFile reads a .env file and returns a map of key=value pairs.
+// Lines starting with # and empty lines are skipped.
+func parseEnvFile(path string) (map[string]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	vars := make(map[string]string)
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		vars[strings.TrimSpace(key)] = strings.TrimSpace(value)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return vars, nil
+}
+
+// applyEnvDir sets *dst to the value of envVars[key] when the key is present
+// and non-empty.
+func applyEnvDir(envVars map[string]string, key string, dst *string) {
+	if v := envVars[key]; v != "" {
+		*dst = v
+	}
 }

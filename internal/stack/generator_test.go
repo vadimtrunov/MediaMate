@@ -212,17 +212,15 @@ func TestGeneratePassword(t *testing.T) {
 		}
 	})
 
-	t.Run("uniqueness", func(t *testing.T) {
-		seen := make(map[string]bool)
-		for i := 0; i < 50; i++ {
-			p, err := GeneratePassword(16)
-			if err != nil {
-				t.Fatalf("GeneratePassword(16) error on iteration %d: %v", i, err)
+	t.Run("hex charset", func(t *testing.T) {
+		p, err := GeneratePassword(16)
+		if err != nil {
+			t.Fatalf("GeneratePassword(16) error: %v", err)
+		}
+		for _, c := range p {
+			if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+				t.Errorf("unexpected character %q in hex password", c)
 			}
-			if seen[p] {
-				t.Fatalf("duplicate password generated: %s", p)
-			}
-			seen[p] = true
 		}
 	})
 }

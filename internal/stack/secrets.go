@@ -14,6 +14,9 @@ const defaultPasswordLen = 16
 // byte length, hex-encoded (so the returned string is 2*n characters long).
 // A length of 16 produces a 32-character hex string.
 func GeneratePassword(n int) (string, error) {
+	if n <= 0 {
+		return "", fmt.Errorf("password length must be positive")
+	}
 	b := make([]byte, n)
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("generate password: %w", err)

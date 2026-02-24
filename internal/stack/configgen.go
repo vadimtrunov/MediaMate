@@ -77,17 +77,15 @@ func renderConfigTorrentClient(b *strings.Builder, cfg *Config) {
 		b.WriteString("  password: ${QBITTORRENT_PASSWORD}\n\n")
 	case ComponentTransmission:
 		host := torrentHost(cfg, "transmission")
-		b.WriteString("# Transmission support requires implementation\n")
-		b.WriteString("# transmission:\n")
-		b.WriteString("#   url: \"http://" + host + ":9091\"\n")
-		b.WriteString("#   username: \"admin\"\n")
-		b.WriteString("#   password: ${TRANSMISSION_PASSWORD}\n\n")
+		b.WriteString("transmission:\n")
+		b.WriteString("  url: \"http://" + host + ":9091\"\n")
+		b.WriteString("  username: \"admin\"\n")
+		b.WriteString("  password: ${TRANSMISSION_PASSWORD}\n\n")
 	case ComponentDeluge:
 		host := torrentHost(cfg, "deluge")
-		b.WriteString("# Deluge support requires implementation\n")
-		b.WriteString("# deluge:\n")
-		b.WriteString("#   url: \"http://" + host + ":8112\"\n")
-		b.WriteString("#   password: ${DELUGE_PASSWORD}\n\n")
+		b.WriteString("deluge:\n")
+		b.WriteString("  url: \"http://" + host + ":8112\"\n")
+		b.WriteString("  password: ${DELUGE_PASSWORD}\n\n")
 	}
 }
 

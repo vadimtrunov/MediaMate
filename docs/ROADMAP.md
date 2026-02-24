@@ -1,19 +1,19 @@
 # MediaMate Development Roadmap
 
-## Философия реализации
+## Implementation Philosophy
 
-Строим поэтапно, каждая фаза — полностью рабочий продукт. Начинаем с минимума, постепенно добавляем функциональность.
+We build incrementally — each phase is a fully working product. Start with the minimum, gradually add functionality.
 
 ---
 
 ## Phase 0: Foundation (Week 1-2)
 
 ### 0.1 Project Structure
-- [ ] Настроить Go module структуру
-- [ ] Определить пакеты: `cmd/`, `internal/`, `pkg/`
-- [ ] Настроить CI/CD (GitHub Actions)
-- [ ] Makefile для сборки
-- [ ] Docker multi-stage build для ARM64 и AMD64
+- [ ] Set up Go module structure
+- [ ] Define packages: `cmd/`, `internal/`, `pkg/`
+- [ ] Set up CI/CD (GitHub Actions)
+- [ ] Makefile for builds
+- [ ] Docker multi-stage build for ARM64 and AMD64
 
 ### 0.2 Core Interfaces
 ```go
@@ -26,32 +26,32 @@ type Frontend interface {}
 ```
 
 ### 0.3 Configuration System
-- [ ] YAML конфигурация (`internal/config/`)
+- [ ] YAML configuration (`internal/config/`)
 - [ ] Environment variables override
-- [ ] Валидация конфига
-- [ ] Примеры конфигов: `configs/mediamate.example.yaml`
+- [ ] Config validation
+- [ ] Example configs: `configs/mediamate.example.yaml`
 
 ### 0.4 Logging & Observability
-- [ ] Structured logging (zerolog или slog)
-- [ ] Уровни логирования
+- [ ] Structured logging (zerolog or slog)
+- [ ] Log levels
 - [ ] Context-aware logging
 
-**Deliverable:** Пустой скелет проекта с интерфейсами и конфигом
+**Deliverable:** Empty project skeleton with interfaces and config
 
 ---
 
 ## Phase 1: MVP Backend (Week 3-5)
 
 ### 1.1 LLM Integration (Claude)
-- [ ] `internal/llm/claude/` — Claude API клиент
-- [ ] Tool calling поддержка (Claude function calling)
-- [ ] Retry logic и error handling
+- [ ] `internal/llm/claude/` — Claude API client
+- [ ] Tool calling support (Claude function calling)
+- [ ] Retry logic and error handling
 - [ ] Rate limiting
-- [ ] Тесты с mock LLM
+- [ ] Tests with mock LLM
 
-**Tools для Claude:**
+**Tools for Claude:**
 ```go
-// Определяем инструменты, которые LLM может вызывать
+// Define tools that the LLM can invoke
 - SearchMovie(query string) []Movie
 - DownloadMovie(movieID int) Status
 - GetDownloadStatus() []Download
@@ -59,54 +59,54 @@ type Frontend interface {}
 ```
 
 ### 1.2 TMDb Integration
-- [ ] `internal/metadata/tmdb/` — TMDb API клиент
-- [ ] Поиск фильмов
-- [ ] Рекомендации
-- [ ] Детали фильма (рейтинг, описание, постеры)
-- [ ] Кеширование популярных запросов
+- [ ] `internal/metadata/tmdb/` — TMDb API client
+- [ ] Movie search
+- [ ] Recommendations
+- [ ] Movie details (rating, description, posters)
+- [ ] Caching for popular queries
 
 ### 1.3 Radarr Integration
-- [ ] `internal/backend/radarr/` — Radarr API клиент
-- [ ] Поиск релизов
-- [ ] Добавление фильмов в библиотеку
-- [ ] Мониторинг статуса
+- [ ] `internal/backend/radarr/` — Radarr API client
+- [ ] Release search
+- [ ] Adding movies to library
+- [ ] Status monitoring
 - [ ] Quality profiles
 
 ### 1.4 qBittorrent Integration
-- [ ] `internal/torrent/qbittorrent/` — qBittorrent Web API клиент
-- [ ] Получение списка торрентов
-- [ ] Прогресс загрузки
-- [ ] Управление (пауза/возобновление)
+- [ ] `internal/torrent/qbittorrent/` — qBittorrent Web API client
+- [ ] Getting torrent list
+- [ ] Download progress
+- [ ] Management (pause/resume)
 
 ### 1.5 Core Orchestration
-- [ ] `internal/agent/` — AI агент-оркестратор
-- [ ] Парсинг интента из LLM
-- [ ] Маппинг tool calls в реальные вызовы API
+- [ ] `internal/agent/` — AI agent orchestrator
+- [ ] Intent parsing from LLM
+- [ ] Mapping tool calls to actual API calls
 - [ ] Conversation state management
 - [ ] Multi-step flows (search → confirm → download)
 
-**Deliverable:** Backend, который понимает запросы и управляет медиа через Radarr + qBittorrent
+**Deliverable:** Backend that understands requests and manages media via Radarr + qBittorrent
 
 ---
 
 ## Phase 2: CLI Frontend (Week 6)
 
 ### 2.1 Interactive CLI
-- [ ] `cmd/mediamate/chat.go` — интерактивный чат в терминале
-- [ ] История сообщений (arrows up/down)
-- [ ] Красивый вывод (bubbles/lipgloss)
-- [ ] Streaming responses от LLM
-- [ ] Цветной вывод (фильмы, статусы)
+- [ ] `cmd/mediamate/chat.go` — interactive chat in terminal
+- [ ] Message history (arrows up/down)
+- [ ] Beautiful output (bubbles/lipgloss)
+- [ ] Streaming responses from LLM
+- [ ] Colored output (movies, statuses)
 
 ### 2.2 CLI Commands
 ```bash
-mediamate chat              # Интерактивный чат
-mediamate query "скачай Дюну"  # Разовый запрос
-mediamate status            # Статус загрузок
-mediamate config validate   # Проверка конфига
+mediamate chat              # Interactive chat
+mediamate query "download Dune"  # One-off query
+mediamate status            # Download status
+mediamate config validate   # Config validation
 ```
 
-**Deliverable:** Можно полноценно общаться с ботом через терминал
+**Deliverable:** Full chat with the bot via terminal
 
 ---
 
@@ -114,19 +114,19 @@ mediamate config validate   # Проверка конфига
 
 ### 3.1 Telegram Bot
 - [ ] `internal/frontend/telegram/` — Telegram Bot API
-- [ ] Обработка текстовых сообщений
-- [ ] Inline keyboard для подтверждений
-- [ ] Streaming ответов (typing indicator)
+- [ ] Text message handling
+- [ ] Inline keyboard for confirmations
+- [ ] Streaming responses (typing indicator)
 - [ ] Multi-user support (user isolation)
-- [ ] Admin whitelist (только разрешенные user IDs)
+- [ ] Admin whitelist (only allowed user IDs)
 
 ### 3.2 Rich Media
-- [ ] Отправка постеров фильмов
-- [ ] Форматирование рекомендаций (Markdown)
-- [ ] Progress bars для загрузок
-- [ ] Callback buttons (скачать 1/2/3)
+- [ ] Sending movie posters
+- [ ] Recommendation formatting (Markdown)
+- [ ] Progress bars for downloads
+- [ ] Callback buttons (download 1/2/3)
 
-**Deliverable:** v0.1 — Полноценный MVP с Telegram + CLI
+**Deliverable:** v0.1 — Full MVP with Telegram + CLI
 
 ---
 
@@ -134,122 +134,122 @@ mediamate config validate   # Проверка конфига
 
 ### 4.1 Jellyfin Integration
 - [ ] `internal/mediaserver/jellyfin/` — Jellyfin API
-- [ ] Проверка доступности фильма
-- [ ] Генерация ссылок на просмотр
-- [ ] Webhook для уведомлений о новом контенте
+- [ ] Movie availability check
+- [ ] Generating watch links
+- [ ] Webhook for new content notifications
 
 ### 4.2 Docker Compose Stack
-- [ ] `mediamate stack init` — интерактивный wizard
-  - Выбор компонентов (Radarr, Sonarr, Jellyfin, etc)
-  - Генерация `docker-compose.yml`
-  - Генерация `.env` с секретами
-- [ ] `mediamate stack up` — запуск стека
-- [ ] `mediamate stack down` — остановка
-- [ ] Health checks всех сервисов
+- [ ] `mediamate stack init` — interactive wizard
+  - Component selection (Radarr, Sonarr, Jellyfin, etc)
+  - Generate `docker-compose.yml`
+  - Generate `.env` with secrets
+- [ ] `mediamate stack up` — start the stack
+- [ ] `mediamate stack down` — stop the stack
+- [ ] Health checks for all services
 
 ### 4.3 Setup Wizard
-- [ ] Автоматическая настройка Radarr (quality profiles, root folders)
-- [ ] Автоматическая настройка Prowlarr + indexers
-- [ ] Связывание Radarr ↔ Prowlarr ↔ qBittorrent
-- [ ] Тесты подключений
+- [ ] Automatic Radarr setup (quality profiles, root folders)
+- [ ] Automatic Prowlarr + indexers setup
+- [ ] Linking Radarr <-> Prowlarr <-> qBittorrent
+- [ ] Connection tests
 
-**Deliverable:** `mediamate stack init` → полностью рабочий стек за 5 минут
+**Deliverable:** `mediamate stack init` → fully working stack in 5 minutes
 
 ---
 
 ## Phase 5: Sonarr & Readarr (Week 11-12)
 
 ### 5.1 Sonarr Support
-- [ ] `internal/backend/sonarr/` — Sonarr API клиент
-- [ ] Поиск сериалов
-- [ ] Мониторинг сезонов/эпизодов
-- [ ] Обновление LLM tools для TV shows
+- [ ] `internal/backend/sonarr/` — Sonarr API client
+- [ ] TV show search
+- [ ] Season/episode monitoring
+- [ ] Update LLM tools for TV shows
 
 ### 5.2 Readarr Support
-- [ ] `internal/backend/readarr/` — Readarr API клиент
-- [ ] Поиск книг
-- [ ] E-book форматы (epub, mobi, pdf)
+- [ ] `internal/backend/readarr/` — Readarr API client
+- [ ] Book search
+- [ ] E-book formats (epub, mobi, pdf)
 
 ### 5.3 Unified Search
-- [ ] LLM определяет тип контента (movie/show/book)
-- [ ] Единый интерфейс поиска
-- [ ] Приоритизация результатов
+- [ ] LLM determines content type (movie/show/book)
+- [ ] Unified search interface
+- [ ] Result prioritization
 
-**Deliverable:** v0.2 — Поддержка фильмов, сериалов, книг
+**Deliverable:** v0.2 — Support for movies, TV shows, books
 
 ---
 
 ## Phase 6: Alternative Providers (Week 13-14)
 
 ### 6.1 OpenAI Support
-- [ ] `internal/llm/openai/` — OpenAI клиент
+- [ ] `internal/llm/openai/` — OpenAI client
 - [ ] GPT-4 Turbo function calling
-- [ ] Переключение в конфиге
+- [ ] Switching via config
 
 ### 6.2 Ollama Support
-- [ ] `internal/llm/ollama/` — Ollama клиент
-- [ ] Локальные модели (Llama 3, Mistral)
-- [ ] Автоопределение доступных моделей
+- [ ] `internal/llm/ollama/` — Ollama client
+- [ ] Local models (Llama 3, Mistral)
+- [ ] Auto-detection of available models
 
 ### 6.3 Alternative Torrent Clients
 - [ ] `internal/torrent/transmission/`
 - [ ] `internal/torrent/deluge/`
-- [ ] Единый интерфейс `TorrentClient`
+- [ ] Unified `TorrentClient` interface
 
-**Deliverable:** v0.3 — Гибкость выбора компонентов
+**Deliverable:** v0.3 — Flexible component selection
 
 ---
 
 ## Phase 7: Advanced Features (Week 15-16)
 
 ### 7.1 Conversation History
-- [ ] SQLite для хранения истории
-- [ ] Контекст предыдущих запросов
-- [ ] "Помнишь, я просил скачать тот фильм?" → LLM ищет в истории
+- [ ] SQLite for history storage
+- [ ] Previous request context
+- [ ] "Remember, I asked you to download that movie?" → LLM searches history
 
 ### 7.2 Claude OAuth
-- [ ] Авторизация через Claude.ai subscription
-- [ ] Снижение затрат для пользователей с подпиской
+- [ ] Authorization via Claude.ai subscription
+- [ ] Reduced costs for users with a subscription
 
 ### 7.3 Notifications
-- [ ] Webhook от Radarr/Sonarr при завершении загрузки
-- [ ] Уведомление в Telegram: "Interstellar готов к просмотру!"
-- [ ] Прямая ссылка на Jellyfin
+- [ ] Webhook from Radarr/Sonarr when download completes
+- [ ] Telegram notification: "Interstellar is ready to watch!"
+- [ ] Direct link to Jellyfin
 
 ### 7.4 Smart Recommendations
-- [ ] Персональные рекомендации на основе истории
-- [ ] "Что посмотреть сегодня вечером?" → анализ лайков/дизлайков
-- [ ] Интеграция с Jellyfin viewing history
+- [ ] Personal recommendations based on history
+- [ ] "What to watch tonight?" → analysis of likes/dislikes
+- [ ] Integration with Jellyfin viewing history
 
-**Deliverable:** v0.4 — Умный ассистент с памятью
+**Deliverable:** v0.4 — Smart assistant with memory
 
 ---
 
 ## Phase 8: Polish & Release (Week 17-20)
 
 ### 8.1 Testing
-- [ ] Unit тесты (>80% coverage)
-- [ ] Integration тесты с mock API
-- [ ] End-to-end тесты в Docker
-- [ ] Тесты на ARM64 (Raspberry Pi 5)
+- [ ] Unit tests (>80% coverage)
+- [ ] Integration tests with mock API
+- [ ] End-to-end tests in Docker
+- [ ] Tests on ARM64 (Raspberry Pi 5)
 
 ### 8.2 Documentation
 - [ ] Docs site (Hugo/MkDocs)
-- [ ] Пошаговые гайды
+- [ ] Step-by-step guides
 - [ ] API reference
 - [ ] Troubleshooting
 - [ ] Video demos
 
 ### 8.3 Install Script
 - [ ] One-liner install: `curl ... | bash`
-- [ ] Автоопределение ARM64/AMD64
+- [ ] Auto-detection of ARM64/AMD64
 - [ ] Systemd service
 - [ ] Auto-updates
 
 ### 8.4 Performance
-- [ ] Benchmarks LLM response time
-- [ ] Оптимизация памяти (важно для RPi)
-- [ ] Параллельные запросы к API
+- [ ] Benchmarks for LLM response time
+- [ ] Memory optimization (important for RPi)
+- [ ] Parallel API requests
 - [ ] Graceful shutdown
 
 **Deliverable:** v1.0 — Production-ready release
@@ -259,7 +259,7 @@ mediamate config validate   # Проверка конфига
 ## Future Ideas (Post v1.0)
 
 ### Discord & Matrix Frontends
-- Аналогично Telegram, но для других платформ
+- Similar to Telegram, but for other platforms
 
 ### Web UI
 - React/Vue dashboard
@@ -268,32 +268,32 @@ mediamate config validate   # Проверка конфига
 - Settings UI
 
 ### Advanced AI Features
-- Голосовой ввод (Whisper)
-- Генерация плейлистов ("создай подборку фильмов на выходные")
-- Автоматический контент ("каждую пятницу скачивай новый эпизод The Mandalorian")
+- Voice input (Whisper)
+- Playlist generation ("create a movie collection for the weekend")
+- Automatic content ("every Friday download the new episode of The Mandalorian")
 
 ### Multi-instance Support
-- Несколько Radarr (4K + 1080p)
-- Профили качества на основе устройства воспроизведения
+- Multiple Radarr instances (4K + 1080p)
+- Quality profiles based on playback device
 
 ### Subtitle Management
-- Bazarr интеграция
-- Автоскачивание субтитров на нужном языке
+- Bazarr integration
+- Automatic subtitle download in the desired language
 
 ---
 
 ## Success Metrics
 
 ### v0.1 (MVP)
-- [ ] Можно попросить скачать фильм через Telegram
-- [ ] Фильм появляется в Jellyfin через ~10-30 минут
-- [ ] Работает на Raspberry Pi 5
+- [ ] Can ask to download a movie via Telegram
+- [ ] Movie appears in Jellyfin within ~10-30 minutes
+- [ ] Works on Raspberry Pi 5
 
 ### v1.0 (Production)
-- [ ] <5 секунд на ответ LLM
-- [ ] <100MB RAM на ARM64
-- [ ] Install в 1 команду
-- [ ] Документация на уровне Homelab-проектов
+- [ ] <5 seconds for LLM response
+- [ ] <100MB RAM on ARM64
+- [ ] Install in 1 command
+- [ ] Documentation on par with Homelab projects
 
 ---
 
@@ -319,12 +319,12 @@ mediamate config validate   # Проверка конфига
 
 ## Development Principles
 
-1. **Interface-first** — Каждый компонент за интерфейсом, легко swap
-2. **Test-friendly** — Все API клиенты mockable
-3. **ARM64 first** — Raspberry Pi 5 как primary target
-4. **Config-driven** — Никаких hardcoded значений
-5. **Fail-safe** — Graceful degradation если какой-то сервис недоступен
-6. **User-centric** — Простота setup важнее гибкости
+1. **Interface-first** — Every component behind an interface, easy to swap
+2. **Test-friendly** — All API clients are mockable
+3. **ARM64 first** — Raspberry Pi 5 as primary target
+4. **Config-driven** — No hardcoded values
+5. **Fail-safe** — Graceful degradation if a service is unavailable
+6. **User-centric** — Ease of setup is more important than flexibility
 
 ---
 
@@ -335,7 +335,7 @@ mediamate config validate   # Проверка конфига
 - **Weeks 13-16:** Alternative providers (v0.3-v0.4)
 - **Weeks 17-20:** Polish & release (v1.0)
 
-**Total:** ~5 месяцев до v1.0
+**Total:** ~5 months to v1.0
 
 ---
 

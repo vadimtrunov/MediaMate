@@ -1,165 +1,165 @@
 # Linters Configuration Guide
 
-## 🔥 Строгие, но адекватные линтеры!
+## Strict but Reasonable Linters!
 
-В этом проекте используется **45+ линтеров** для контроля качества кода.
+This project uses **45+ linters** for code quality control.
 
-**Философия:** Ловить реальные баги и проблемы, не бесить по мелочам.
+**Philosophy:** Catch real bugs and issues, don't annoy over trivial things.
 
 ---
 
-## Что включено
+## What's Enabled
 
-### 🛡️ Security (Безопасность)
-- **gosec** — поиск уязвимостей безопасности
-  - Жёсткие пароли в коде
-  - Небезопасные HTTP соединения
-  - Слабые алгоритмы шифрования (MD5, SHA1, DES)
+### Security
+- **gosec** — security vulnerability detection
+  - Hardcoded passwords in code
+  - Insecure HTTP connections
+  - Weak encryption algorithms (MD5, SHA1, DES)
   - SQL injection
   - Path traversal
   - Command injection
 
-### 🐛 Bug Detection (Поиск багов)
-- **errcheck** — все ошибки проверяются
-- **bodyclose** — HTTP response body закрыт
-- **rowserrcheck** — sql.Rows.Err проверен
-- **sqlclosecheck** — sql.Rows/Stmt закрыты
-- **nilerr** — возврат nil вместо ошибки
-- **nilnil** — запрет возврата (nil, nil)
-- **makezero** — правильное использование make
-- **reassign** — проверка переприсваивания
+### Bug Detection
+- **errcheck** — all errors are checked
+- **bodyclose** — HTTP response body is closed
+- **rowserrcheck** — sql.Rows.Err is checked
+- **sqlclosecheck** — sql.Rows/Stmt are closed
+- **nilerr** — returning nil instead of error
+- **nilnil** — disallow returning (nil, nil)
+- **makezero** — correct usage of make
+- **reassign** — reassignment checks
 
-### 📊 Code Complexity (Сложность кода)
-- **cyclop** — цикломатическая сложность ≤15
-- **gocognit** — когнитивная сложность ≤20
-- **gocyclo** — дублирование проверки сложности
-- **funlen** — функции ≤80 строк / ≤40 statements
-- **nestif** — вложенность if ≤4
+### Code Complexity
+- **cyclop** — cyclomatic complexity <= 15
+- **gocognit** — cognitive complexity <= 20
+- **gocyclo** — duplicate complexity check
+- **funlen** — functions <= 80 lines / 40 statements
+- **nestif** — if nesting <= 4
 
-### 🎨 Code Style (Стиль кода)
-- **gofmt** / **gofumpt** — форматирование кода
-- **goimports** / **gci** — сортировка импортов
-- **stylecheck** — стиль Go кода
-- **revive** — замена golint с расширенными проверками
-- **godot** — комментарии заканчиваются точкой
-- **whitespace** — лишние пробелы
-- **lll** — длина строк ≤140 символов
+### Code Style
+- **gofmt** / **gofumpt** — code formatting
+- **goimports** / **gci** — import sorting
+- **stylecheck** — Go code style
+- **revive** — golint replacement with extended checks
+- **godot** — comments end with a period
+- **whitespace** — extra whitespace
+- **lll** — line length <= 140 characters
 
-### 🏗️ Best Practices (Лучшие практики)
-- **govet** — официальный vet checker
-- **staticcheck** — продвинутый статический анализ
-- **gocritic** — ~100 проверок качества кода
-- **unconvert** — ненужные конверсии типов
-- **unparam** — неиспользуемые параметры
-- **wastedassign** — бесполезные присваивания
-- **ineffassign** — неэффективные присваивания
+### Best Practices
+- **govet** — official vet checker
+- **staticcheck** — advanced static analysis
+- **gocritic** — ~100 code quality checks
+- **unconvert** — unnecessary type conversions
+- **unparam** — unused parameters
+- **wastedassign** — useless assignments
+- **ineffassign** — ineffective assignments
 
-### 🧹 Code Smells (Запахи кода)
-- **dupl** — дубликаты кода (threshold: 100 токенов)
-- **goconst** — повторяющиеся строки (≥3 раза) → константы
-- **gomnd** — магические числа → именованные константы
-- **nakedret** — голые return в длинных функциях
+### Code Smells
+- **dupl** — code duplication (threshold: 100 tokens)
+- **goconst** — repeated strings (>= 3 times) → constants
+- **gomnd** — magic numbers → named constants
+- **nakedret** — naked returns in long functions
 
-### 🔍 Error Handling (Обработка ошибок)
-- **errorlint** — правильный wrap/unwrap ошибок
-- **wrapcheck** — ошибки должны быть обёрнуты
-- **errname** — имена ошибок заканчиваются на Error
+### Error Handling
+- **errorlint** — proper error wrap/unwrap
+- **wrapcheck** — errors must be wrapped
+- **errname** — error names end with Error
 
-### 🧪 Testing (Тестирование)
-- **tenv** — os.Setenv только в тестах
-- **thelper** — test helpers используют t.Helper()
-- **tparallel** — параллельные тесты правильно
-- **testpackage** — тесты в отдельном пакете (_test)
-- **testableexamples** — примеры тестируемые
+### Testing
+- **tenv** — os.Setenv only in tests
+- **thelper** — test helpers use t.Helper()
+- **tparallel** — parallel tests done correctly
+- **testpackage** — tests in separate package (_test)
+- **testableexamples** — examples are testable
 
-### 🔒 Context & Concurrency (Контекст и конкурентность)
-- **contextcheck** — context правильно передан
-- **noctx** — HTTP request с context
-- **exportloopref** — нет утечки переменных цикла
+### Context & Concurrency
+- **contextcheck** — context is properly passed
+- **noctx** — HTTP request with context
+- **exportloopref** — no loop variable leaks
 
-### 📝 Naming & Conventions (Именование)
-- **goprintffuncname** — Printf функции именованы правильно
-- **interfacebloat** — интерфейс ≤10 методов
-- **predeclared** — нет переопределения предобъявленных
-- **usestdlibvars** — использование stdlib констант
-- **tagliatelle** — консистентный стиль тегов (json: snake_case)
+### Naming & Conventions
+- **goprintffuncname** — Printf functions named correctly
+- **interfacebloat** — interface <= 10 methods
+- **predeclared** — no redefinition of predeclared identifiers
+- **usestdlibvars** — use stdlib constants
+- **tagliatelle** — consistent tag style (json: snake_case)
 
-### 🌐 Unicode & Encoding
-- **asciicheck** — только ASCII в коде
-- **bidichk** — опасные bidirectional unicode символы
-- **misspell** — опечатки в коде/комментариях
+### Unicode & Encoding
+- **asciicheck** — ASCII only in code
+- **bidichk** — dangerous bidirectional unicode characters
+- **misspell** — typos in code/comments
 
-### 📦 Dependencies (Зависимости)
-- **gomoddirectives** — проверка go.mod директив
-- **gomodguard** — блокировка запрещённых зависимостей
+### Dependencies
+- **gomoddirectives** — go.mod directives check
+- **gomodguard** — block forbidden dependencies
 
-### 🎯 Performance (Производительность)
-- **gocritic** (performance tag) — проблемы производительности
+### Performance
+- **gocritic** (performance tag) — performance issues
 
 ---
 
-## Что отключено в тестах
+## What's Disabled in Tests
 
-Тесты имеют менее строгие правила:
+Tests have less strict rules:
 
 ```yaml
-- gomnd        # Можно магические числа
-- funlen       # Длинные тест-функции OK
-- gocognit     # Сложность не важна в тестах
-- dupl         # Дубликаты допустимы
-- lll          # Длинные строки OK (например, URLs)
-- goconst      # Повторения допустимы
-- wrapcheck    # Можно не wrap ошибки
+- gomnd        # Magic numbers allowed
+- funlen       # Long test functions are OK
+- gocognit     # Complexity doesn't matter in tests
+- dupl         # Duplicates are acceptable
+- lll          # Long lines are OK (e.g., URLs)
+- goconst      # Repetitions are acceptable
+- wrapcheck    # Error wrapping not required
 ```
 
 ---
 
-## Использование
+## Usage
 
-### Проверить код
+### Check code
 
 ```bash
 make lint
 ```
 
-### Автофикс где возможно
+### Auto-fix where possible
 
 ```bash
 make lint-fix
 ```
 
-### Строгий режим (все линтеры)
+### Strict mode (all linters)
 
 ```bash
 make lint-strict
 ```
 
-### Форматирование
+### Formatting
 
 ```bash
-make fmt         # Форматирование кода
-make imports     # Сортировка импортов
+make fmt         # Format code
+make imports     # Sort imports
 ```
 
-### Pre-commit проверка
+### Pre-commit check
 
 ```bash
 make pre-commit  # fmt + imports + lint + test
 ```
 
-### Установить git hook
+### Install git hook
 
 ```bash
 make install-hooks
 ```
 
-Теперь перед каждым коммитом автоматически запустятся проверки.
+Now checks will run automatically before each commit.
 
 ---
 
-## Примеры найденных проблем
+## Examples of Detected Issues
 
-### ❌ Магические числа
+### Magic Numbers
 
 ```go
 // BAD
@@ -175,7 +175,7 @@ func calculate(x int) int {
 }
 ```
 
-### ❌ Непроверенные ошибки
+### Unchecked Errors
 
 ```go
 // BAD
@@ -194,7 +194,7 @@ defer func() {
 }()
 ```
 
-### ❌ Дубликаты кода
+### Code Duplication
 
 ```go
 // BAD
@@ -222,7 +222,7 @@ func insertUser(isAdmin bool) {
 }
 ```
 
-### ❌ Высокая сложность
+### High Complexity
 
 ```go
 // BAD - cyclomatic complexity 18
@@ -233,7 +233,7 @@ func processRequest(r *Request) error {
                 // ...
                 if x > 10 {
                     if y < 5 {
-                        // Слишком много вложенности!
+                        // Too much nesting!
                     }
                 }
             }
@@ -241,7 +241,7 @@ func processRequest(r *Request) error {
     }
 }
 
-// GOOD - разбить на функции
+// GOOD - split into functions
 func processRequest(r *Request) error {
     if err := validateRequest(r); err != nil {
         return err
@@ -253,14 +253,14 @@ func validateRequest(r *Request) error { /* ... */ }
 func handleRequest(r *Request) error { /* ... */ }
 ```
 
-### ❌ Не обёрнутые ошибки
+### Unwrapped Errors
 
 ```go
 // BAD
 func loadConfig() error {
     _, err := os.ReadFile("config.yaml")
     if err != nil {
-        return err  // Потеряли контекст!
+        return err  // Lost context!
     }
 }
 
@@ -273,7 +273,7 @@ func loadConfig() error {
 }
 ```
 
-### ❌ Context не передан
+### Missing Context
 
 ```go
 // BAD
@@ -291,18 +291,18 @@ func fetchData(ctx context.Context) ([]byte, error) {
 
 ---
 
-## Отключение линтеров (если очень нужно)
+## Disabling Linters (if absolutely necessary)
 
-### Для конкретной строки
+### For a specific line
 
 ```go
 //nolint:gosec // G104: We intentionally ignore this error
 defer file.Close()
 ```
 
-⚠️ Требуется объяснение (require-explanation: true)
+An explanation is required (require-explanation: true)
 
-### Для функции
+### For a function
 
 ```go
 //nolint:funlen,gocognit // This is a complex initialization function
@@ -311,20 +311,20 @@ func setupApplication() {
 }
 ```
 
-### Для файла
+### For a file
 
 ```go
 //nolint:all
 package generated
 
-// Автоматически сгенерированный код
+// Auto-generated code
 ```
 
 ---
 
-## CI/CD интеграция
+## CI/CD Integration
 
-В GitHub Actions линтеры запускаются автоматически:
+Linters run automatically in the GitHub Actions CI/CD pipeline:
 
 ```yaml
 - name: Run golangci-lint
@@ -334,136 +334,136 @@ package generated
     args: --timeout=5m
 ```
 
-PR не пройдёт если есть ошибки линтеров!
+PRs will not pass if there are linter errors!
 
 ---
 
-## Настройка под себя
+## Customization
 
-Если линтеры слишком строгие, можно ослабить в `.golangci.yml`:
+If linters are too strict, you can relax them in `.golangci.yml`:
 
 ```yaml
 linters-settings:
   funlen:
-    lines: 120        # Было 80
-    statements: 60    # Было 40
+    lines: 120        # Was 80
+    statements: 60    # Was 40
 
   cyclop:
-    max-complexity: 20  # Было 15
+    max-complexity: 20  # Was 15
 ```
 
-Но **лучше написать качественный код** вместо ослабления линтеров! 💪
+But **it's better to write quality code** instead of relaxing linters!
 
 ---
 
-## Статистика линтеров
+## Linter Statistics
 
-Текущая конфигурация:
+Current configuration:
 
-- ✅ **45+ активных линтеров**
-- 🔍 **80+ проверок** от gocritic + revive
-- 🛡️ **Security checks** от gosec (medium severity)
-- 📊 **5 проверок сложности** (cyclop ≤20, gocognit ≤30, funlen ≤120)
-- 🐛 **15+ проверок ошибок**
-- 🎨 **10+ проверок стиля**
+- **45+ active linters**
+- **80+ checks** from gocritic + revive
+- **Security checks** from gosec (medium severity)
+- **5 complexity checks** (cyclop <= 20, gocognit <= 30, funlen <= 120)
+- **15+ error checks**
+- **10+ style checks**
 
-**Сбалансированные лимиты:**
-- Функции: ≤120 строк (вместо 80)
-- Сложность: ≤20/30 (вместо 15/20)
-- Строки: ≤140 символов
-- Дубликаты: ≥150 токенов
+**Balanced limits:**
+- Functions: <= 120 lines (instead of 80)
+- Complexity: <= 20/30 (instead of 15/20)
+- Lines: <= 140 characters
+- Duplicates: >= 150 tokens
 
-**Это делает код:**
-- Безопаснее (security)
-- Читабельнее (style)
-- Поддерживаемее (complexity)
-- Без багов (bug detection)
-- Производительнее (performance)
+**This makes code:**
+- Safer (security)
+- More readable (style)
+- More maintainable (complexity)
+- Bug-free (bug detection)
+- More performant (performance)
 
-## ❌ Что ОТКЛЮЧЕНО (и почему)
+## What's DISABLED (and why)
 
-Эти линтеры слишком строгие или annoying:
+These linters are too strict or annoying:
 
-- **varnamelen** — ныл бы на `i`, `j`, `k` в циклах
-- **testpackage** — тесты в отдельных пакетах не всегда удобно
-- **godot** — точка в конце каждого комментария бесит
-- **wrapcheck** — требует wrap всех ошибок (слишком агрессивно)
-- **tagliatelle** — диктует стиль тегов (может не подходить)
-- **nilnil** — (nil, nil) иногда валидно
-- **gochecknoinits** — init() иногда нужен
-- **exhaustruct** — все поля структуры (слишком строго)
-- **goerr113** — требует sentinel errors (overkill)
-- **paralleltest** — t.Parallel не всегда нужен
-- **wsl** — whitespace linter (слишком придирчивый)
+- **varnamelen** — would complain about `i`, `j`, `k` in loops
+- **testpackage** — tests in separate packages are not always convenient
+- **godot** — period at the end of every comment is annoying
+- **wrapcheck** — requires wrapping all errors (too aggressive)
+- **tagliatelle** — dictates tag style (may not fit)
+- **nilnil** — (nil, nil) is sometimes valid
+- **gochecknoinits** — init() is sometimes needed
+- **exhaustruct** — all struct fields (too strict)
+- **goerr113** — requires sentinel errors (overkill)
+- **paralleltest** — t.Parallel is not always needed
+- **wsl** — whitespace linter (too picky)
 
-**Можем включить позже если понадобится!**
+**We can enable these later if needed!**
 
 ---
 
-## Полезные команды
+## Useful Commands
 
 ```bash
-# Показать все доступные линтеры
+# Show all available linters
 golangci-lint linters
 
-# Показать что именно проверяет каждый линтер
+# Show what each linter checks
 golangci-lint help linters
 
-# Проверить конфигурацию
+# Check configuration
 golangci-lint config
 
-# Запустить только определённый линтер
+# Run only a specific linter
 golangci-lint run --disable-all --enable=gosec
 
-# Игнорировать определённые файлы
+# Ignore specific files
 golangci-lint run --skip-files=".*_test.go"
 ```
 
 ---
 
-## Рекомендации
+## Recommendations
 
-1. **Установи git hook**: `make install-hooks`
-2. **Запускай перед коммитом**: `make pre-commit`
-3. **Чини warnings сразу**, не накапливай долг
-4. **Не отключай линтеры без причины**
-5. **Если nolint нужен** — пиши объяснение
+1. **Install git hook**: `make install-hooks`
+2. **Run before committing**: `make pre-commit`
+3. **Fix warnings immediately**, don't accumulate debt
+4. **Don't disable linters without a reason**
+5. **If nolint is needed** — write an explanation
 
 ---
 
-## Ресурсы
+## Resources
 
 - golangci-lint docs: https://golangci-lint.run
-- Список всех линтеров: https://golangci-lint.run/usage/linters/
-- Эффективный Go: https://go.dev/doc/effective_go
+- All linters list: https://golangci-lint.run/usage/linters/
+- Effective Go: https://go.dev/doc/effective_go
 - Code Review Comments: https://go.dev/wiki/CodeReviewComments
 
 ---
 
-## Проблемы?
+## Problems?
 
-### Линтер падает с timeout?
+### Linter crashes with timeout?
 
-Увеличь timeout:
+Increase timeout:
 
 ```bash
 golangci-lint run --timeout=10m
 ```
 
-### Ложные срабатывания?
+### False positives?
 
-Добавь в exclude-rules в `.golangci.yml`
+Add to exclude-rules in `.golangci.yml`
 
-### Слишком строго?
+### Too strict?
 
-Вообще нет! Это хорошая практика. Но если реально нужно:
+Not at all! This is good practice. But if you really need to:
 
 ```yaml
 linters:
   disable:
-    - gocritic  # Например
+    - gocritic  # For example
 ```
 
 ---
 
-**Помни:** Линтеры — твои друзья, они находят баги до того как их найдут пользователи! 🐛➡️✅
+**Remember:** Linters are your friends — they find bugs before your users do!

@@ -2,79 +2,79 @@
 
 ## GitHub Repository Setup Checklist
 
-После пуша этих файлов в GitHub:
+After pushing these files to GitHub:
 
-### ✅ Автоматически заработают:
+### Automatically enabled:
 
 1. **GitHub Actions** (CI/CD)
-   - ✅ Build & Test на каждый PR
-   - ✅ Docker multi-arch builds
-   - ✅ CodeQL security scanning
-   - ✅ Release automation
+   - Build & Test on every PR
+   - Docker multi-arch builds
+   - CodeQL security scanning
+   - Release automation
 
 2. **Dependabot**
-   - ✅ Автоматические обновления зависимостей
-   - ✅ Weekly проверка Go modules, Docker, GitHub Actions
+   - Automatic dependency updates
+   - Weekly checks for Go modules, Docker, GitHub Actions
 
 3. **Issue Templates**
-   - ✅ Структурированные формы для bug reports
-   - ✅ Feature request templates
+   - Structured forms for bug reports
+   - Feature request templates
 
-### 🔧 Нужно настроить вручную:
+### Manual setup required:
 
-#### 1. CodeRabbit (AI Code Review) - 2 минуты
+#### 1. CodeRabbit (AI Code Review) - 2 minutes
 
-См. подробную инструкцию: [CODERABBIT_SETUP.md](CODERABBIT_SETUP.md)
+See detailed instructions: [CODERABBIT_SETUP.md](CODERABBIT_SETUP.md)
 
-**Кратко:**
-1. Открой https://coderabbit.ai
+**In short:**
+1. Open https://coderabbit.ai
 2. Sign in with GitHub
-3. Install CodeRabbit на репозиторий `vadimtrunov/MediaMate`
-4. Готово! ✅
+3. Install CodeRabbit on the `vadimtrunov/MediaMate` repository
+4. Done!
 
-#### 2. Codecov (Test Coverage) - опционально
+#### 2. Codecov (Test Coverage) - optional
 
-Если хочешь отслеживать test coverage:
+If you want to track test coverage:
 
-1. Открой https://codecov.io
+1. Open https://codecov.io
 2. Sign in with GitHub
 3. Add repository: `vadimtrunov/MediaMate`
-4. Скопируй `CODECOV_TOKEN`
-5. Добавь в GitHub Secrets:
+4. Copy `CODECOV_TOKEN`
+5. Add to GitHub Secrets:
    ```bash
    gh secret set CODECOV_TOKEN
-   # Вставь токен из Codecov
+   # Paste the token from Codecov
    ```
 
-#### 3. Branch Protection Rules - рекомендуется
+#### 3. Branch Protection Rules - recommended
 
-Защита main ветки:
+Protect the main branch:
 
 ```bash
-# Через GitHub CLI
+# Via GitHub CLI
 gh api repos/vadimtrunov/MediaMate/branches/main/protection -X PUT -f required_status_checks='{"strict":true,"contexts":["test","lint","build"]}' -f enforce_admins=false -f required_pull_request_reviews='{"required_approving_review_count":0}' -f restrictions=null
 ```
 
-Или через UI:
+Or via the UI:
 1. Settings → Branches → Add rule
 2. Branch name pattern: `main`
-3. ✅ Require a pull request before merging
-4. ✅ Require status checks to pass before merging
+3. Require a pull request before merging
+4. Require status checks to pass before merging
    - Select: `test`, `lint`, `build`
 5. Save changes
 
 ---
 
-## Первый коммит
+## First Commit
 
 ```bash
-# Проверь что все файлы добавлены
+# Check that all files are added
 git status
 
-# Добавь все новые файлы
+# Add all new files
 git add .
 
-# Коммит
+# Commit
 git commit -m "chore: setup GitHub workflows and automation
 
 - Add CI/CD workflows (build, test, lint, docker)
@@ -85,73 +85,73 @@ git commit -m "chore: setup GitHub workflows and automation
 - Add issue and PR templates
 - Add golangci-lint and goreleaser configs"
 
-# Пуш
+# Push
 git push origin main
 ```
 
 ---
 
-## Проверка работоспособности
+## Verifying Everything Works
 
-После пуша проверь GitHub Actions:
+After pushing, check GitHub Actions:
 
-1. Открой https://github.com/vadimtrunov/MediaMate/actions
-2. Должны запуститься workflows:
-   - ✅ **CI** (build, test, lint)
-   - ✅ **Security Scan** (CodeQL, Trivy)
-   - ✅ **Release Drafter** (создаст draft release)
+1. Open https://github.com/vadimtrunov/MediaMate/actions
+2. The following workflows should start:
+   - **CI** (build, test, lint)
+   - **Security Scan** (CodeQL, Trivy)
+   - **Release Drafter** (creates a draft release)
 
-Если что-то упадёт — это нормально на начальном этапе (пока нет Go кода).
+If something fails — that's normal at the initial stage (before there's any Go code).
 
 ---
 
-## Что дальше?
+## What's Next?
 
 ### Phase 0: Project Structure
 
-Следующий шаг из [ROADMAP.md](ROADMAP.md):
+Next step from [ROADMAP.md](ROADMAP.md):
 
-1. Создать Go module структуру
-2. Определить core интерфейсы
-3. Настроить конфигурацию
-4. Написать первые тесты
+1. Create Go module structure
+2. Define core interfaces
+3. Set up configuration
+4. Write initial tests
 
-### Создай первый PR
+### Create Your First PR
 
-Проверь что CodeRabbit работает:
+Verify that CodeRabbit works:
 
 ```bash
 git checkout -b feat/project-structure
-# ... создай Go файлы ...
+# ... create Go files ...
 git add .
 git commit -m "feat: add initial project structure"
 git push origin feat/project-structure
 gh pr create --title "feat: Add initial project structure" --body "Phase 0 from roadmap"
 ```
 
-CodeRabbit автоматически прокомментирует PR! 🎉
+CodeRabbit will automatically comment on the PR!
 
 ---
 
-## Полезные команды
+## Useful Commands
 
 ```bash
-# Локальный build
+# Local build
 make build
 
-# Запустить тесты
+# Run tests
 make test
 
-# Линтинг
+# Linting
 make lint
 
-# Проверить что workflows валидны
+# Check that workflows are valid
 gh workflow list
 
-# Посмотреть статус последнего workflow
+# View status of the latest workflow
 gh run list --limit 5
 
-# Посмотреть логи workflow
+# View workflow logs
 gh run view
 ```
 
@@ -159,34 +159,34 @@ gh run view
 
 ## Troubleshooting
 
-### GitHub Actions не запускаются?
+### GitHub Actions not running?
 
-Проверь что workflows enabled:
+Check that workflows are enabled:
 1. Settings → Actions → General
-2. ✅ Allow all actions and reusable workflows
+2. Allow all actions and reusable workflows
 
-### CodeQL падает?
+### CodeQL failing?
 
-Это нормально пока нет Go кода. После создания `cmd/mediamate/main.go` заработает.
+This is normal until there's Go code. It will work after creating `cmd/mediamate/main.go`.
 
-### Docker build падает?
+### Docker build failing?
 
-Нужно создать `Dockerfile` (будет в Phase 0).
+A `Dockerfile` needs to be created (will be done in Phase 0).
 
 ---
 
 ## Summary
 
-**Что уже работает (бесплатно):**
-- ✅ Автоматический build и тесты на каждый PR
-- ✅ Security scanning (CodeQL, Trivy, Gosec)
-- ✅ Dependabot обновления
-- ✅ Release automation
-- ✅ Issue/PR templates
+**What already works (for free):**
+- Automatic build and tests on every PR
+- Security scanning (CodeQL, Trivy, Gosec)
+- Dependabot updates
+- Release automation
+- Issue/PR templates
 
-**Что нужно добавить:**
-- 🔧 CodeRabbit (2 минуты через UI)
-- 🔧 Branch protection (опционально, но рекомендуется)
-- 📊 Codecov (опционально для test coverage)
+**What needs to be added:**
+- CodeRabbit (2 minutes via UI)
+- Branch protection (optional but recommended)
+- Codecov (optional, for test coverage)
 
-**Стоимость:** $0 — всё бесплатно для open source! 🎉
+**Cost:** $0 — everything is free for open source!

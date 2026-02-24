@@ -1,53 +1,53 @@
 # CodeRabbit Setup Instructions
 
-## Что такое CodeRabbit?
+## What is CodeRabbit?
 
-CodeRabbit — это AI-powered code review инструмент, который автоматически ревьюит каждый Pull Request в твоей репе.
+CodeRabbit is an AI-powered code review tool that automatically reviews every Pull Request in your repo.
 
-**Бесплатно для open source проектов!** ✅
-
----
-
-## Установка (2 минуты)
-
-### Шаг 1: Установить GitHub App
-
-1. Открой https://coderabbit.ai
-2. Нажми **"Sign in with GitHub"**
-3. Выбери **"Install CodeRabbit"**
-4. Выбери репозиторий: **vadimtrunov/MediaMate**
-5. Нажми **"Install & Authorize"**
-
-### Шаг 2: Всё! 🎉
-
-CodeRabbit автоматически обнаружит конфиг `.github/.coderabbit.yaml` и начнёт работать.
+**Free for open source projects!**
 
 ---
 
-## Как работает?
+## Installation (2 minutes)
 
-### Автоматический ревью PR
+### Step 1: Install GitHub App
 
-Когда ты создаёшь Pull Request:
+1. Open https://coderabbit.ai
+2. Click **"Sign in with GitHub"**
+3. Select **"Install CodeRabbit"**
+4. Select repository: **vadimtrunov/MediaMate**
+5. Click **"Install & Authorize"**
 
-1. CodeRabbit автоматически анализирует код
-2. Комментирует потенциальные проблемы прямо в PR
-3. Даёт рекомендации по улучшению
-4. Генерирует краткое резюме изменений
+### Step 2: Done!
 
-### Команды в PR
+CodeRabbit will automatically detect the `.github/.coderabbit.yaml` config and start working.
 
-Можешь использовать команды в комментариях PR:
+---
+
+## How It Works
+
+### Automatic PR Review
+
+When you create a Pull Request:
+
+1. CodeRabbit automatically analyzes the code
+2. Comments on potential issues directly in the PR
+3. Gives improvement recommendations
+4. Generates a brief summary of changes
+
+### Commands in PR
+
+You can use commands in PR comments:
 
 ```
-@coderabbitai help                  # Показать все доступные команды
-@coderabbitai review                # Повторить ревью
-@coderabbitai explain               # Объяснить изменения
-@coderabbitai fix                   # Предложить фикс
-@coderabbitai generate tests        # Сгенерировать тесты
+@coderabbitai help                  # Show all available commands
+@coderabbitai review                # Re-run review
+@coderabbitai explain               # Explain changes
+@coderabbitai fix                   # Suggest a fix
+@coderabbitai generate tests        # Generate tests
 ```
 
-### Пример работы
+### Example Output
 
 ```markdown
 ## CodeRabbit Summary
@@ -58,37 +58,37 @@ CodeRabbit автоматически обнаружит конфиг `.github/.
 - Added configuration for API keys
 
 ### Potential Issues
-⚠️ `internal/llm/claude/client.go:42`
+Warning: `internal/llm/claude/client.go:42`
 Consider adding context timeout to API calls
 
 ### Suggestions
-💡 `internal/config/config.go:15`
+`internal/config/config.go:15`
 Use environment variables for sensitive data
 
 ### Security
-🔒 No security issues detected
+No security issues detected
 ```
 
 ---
 
-## Настройка (уже сделано)
+## Configuration (already done)
 
-Конфиг находится в `.github/.coderabbit.yaml`:
+Config is located at `.github/.coderabbit.yaml`:
 
 ```yaml
 language: "en"
 enable_free_tier: true
 
 reviews:
-  profile: "chill"              # Мягкий режим (не слишком придирчивый)
+  profile: "chill"              # Relaxed mode (not too picky)
   auto_review:
-    enabled: true               # Автоматический ревью при каждом PR
-    drafts: false               # Не ревьюить draft PR
+    enabled: true               # Automatic review on every PR
+    drafts: false               # Don't review draft PRs
 
   path_filters:
-    - "!**/*.md"                # Не ревьюить Markdown файлы
-    - "!**/*.json"              # Не ревьюить JSON
-    - "!**/*.yaml"              # Не ревьюить YAML
+    - "!**/*.md"                # Don't review Markdown files
+    - "!**/*.json"              # Don't review JSON
+    - "!**/*.yaml"              # Don't review YAML
 
   path_instructions:
     - path: "internal/**/*.go"
@@ -99,28 +99,28 @@ reviews:
         - Verify context usage
 ```
 
-### Можно настроить:
+### Customization options:
 
-- **`profile`** — уровень придирчивости:
-  - `"assertive"` — строгий (много комментариев)
-  - `"chill"` — мягкий (только важное) ← **текущий**
-  - `"default"` — баланс
+- **`profile`** — strictness level:
+  - `"assertive"` — strict (many comments)
+  - `"chill"` — relaxed (only important stuff) <- **current**
+  - `"default"` — balanced
 
-- **`path_filters`** — какие файлы игнорировать
+- **`path_filters`** — which files to ignore
 
-- **`path_instructions`** — специфичные инструкции для разных частей кода
+- **`path_instructions`** — specific instructions for different parts of the code
 
 ---
 
-## Проверить что работает
+## Verifying It Works
 
-### Создай тестовый PR:
+### Create a test PR:
 
 ```bash
-# Создай новую ветку
+# Create a new branch
 git checkout -b test/coderabbit-test
 
-# Добавь тестовый файл
+# Add a test file
 cat > test.go <<EOF
 package main
 
@@ -133,79 +133,79 @@ git add test.go
 git commit -m "test: add simple function"
 git push origin test/coderabbit-test
 
-# Создай PR
+# Create PR
 gh pr create --title "Test: CodeRabbit integration" --body "Testing AI code review"
 ```
 
-Через 10-30 секунд CodeRabbit должен:
-- Прокомментировать PR
-- Дать резюме изменений
-- Предложить улучшения (если есть)
+Within 10-30 seconds CodeRabbit should:
+- Comment on the PR
+- Give a summary of changes
+- Suggest improvements (if any)
 
 ---
 
 ## Troubleshooting
 
-### CodeRabbit не комментирует PR?
+### CodeRabbit not commenting on PR?
 
-1. Проверь что GitHub App установлен:
+1. Check that the GitHub App is installed:
    - https://github.com/settings/installations
-   - Должен быть **CodeRabbit** с доступом к MediaMate
+   - **CodeRabbit** should have access to MediaMate
 
-2. Проверь что PR не draft:
-   - Draft PR не ревьюятся по умолчанию
+2. Check that the PR is not a draft:
+   - Draft PRs are not reviewed by default
 
-3. Проверь логи CodeRabbit:
-   - Открой PR → вкладка "Checks" → CodeRabbit
+3. Check CodeRabbit logs:
+   - Open PR → "Checks" tab → CodeRabbit
 
-### Слишком много комментариев?
+### Too many comments?
 
-Измени `profile` в `.github/.coderabbit.yaml`:
+Change `profile` in `.github/.coderabbit.yaml`:
 
 ```yaml
 reviews:
-  profile: "chill"  # Поменяй на chill если слишком много
+  profile: "chill"  # Switch to chill if there are too many
 ```
 
-### Нужно игнорировать определённые файлы?
+### Need to ignore specific files?
 
-Добавь в `path_filters`:
+Add to `path_filters`:
 
 ```yaml
 reviews:
   path_filters:
-    - "!**/*.pb.go"          # Игнорировать protobuf
-    - "!**/generated/**"     # Игнорировать generated код
-    - "!vendor/**"           # Игнорировать vendor
+    - "!**/*.pb.go"          # Ignore protobuf
+    - "!**/generated/**"     # Ignore generated code
+    - "!vendor/**"           # Ignore vendor
 ```
 
 ---
 
-## Стоимость
+## Pricing
 
-- **Open Source проекты:** Бесплатно ✅
-- **Private repos (личное использование):** Бесплатно до 5000 строк/месяц
-- **Private repos (команда):** Платные планы
+- **Open source projects:** Free
+- **Private repos (personal use):** Free up to 5000 lines/month
+- **Private repos (team):** Paid plans
 
-Твой проект **MediaMate** — public, так что **100% бесплатно** без ограничений!
+Your project **MediaMate** is public, so it's **100% free** with no limitations!
 
 ---
 
-## Полезные ссылки
+## Useful Links
 
-- Документация: https://docs.coderabbit.ai
+- Documentation: https://docs.coderabbit.ai
 - Dashboard: https://app.coderabbit.ai
-- Примеры: https://github.com/coderabbitai/coderabbit-examples
+- Examples: https://github.com/coderabbitai/coderabbit-examples
 
 ---
 
-## Bonus: Интеграция с другими инструментами
+## Bonus: Integration with Other Tools
 
-CodeRabbit работает отлично с уже настроенными workflows:
+CodeRabbit works great with the already configured workflows:
 
-- ✅ **CodeQL** — находит security issues
-- ✅ **golangci-lint** — линтинг кода
-- ✅ **Tests** — проверяет что тесты проходят
-- ✅ **CodeRabbit** — AI ревью логики и архитектуры
+- **CodeQL** — finds security issues
+- **golangci-lint** — code linting
+- **Tests** — checks that tests pass
+- **CodeRabbit** — AI review of logic and architecture
 
-Вместе они создают мощную систему проверки качества кода!
+Together they create a powerful code quality system!

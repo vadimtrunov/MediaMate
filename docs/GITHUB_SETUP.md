@@ -1,33 +1,33 @@
 # GitHub Repository Setup with AI/LLM Integration
 
-## Цель: Максимальная автоматизация через AI
+## Goal: Maximum Automation through AI
 
 ---
 
 ## 1. GitHub Actions + AI Code Review
 
 ### 1.1 AI Code Review Bot
-**Что:** Автоматический AI-ревью каждого PR
+**What:** Automatic AI review of every PR
 
-**Опции:**
-- **CodeRabbit** (https://coderabbit.ai) — ✅ РЕКОМЕНДУЮ
+**Options:**
+- **CodeRabbit** (https://coderabbit.ai) — RECOMMENDED
   - GPT-4 powered
-  - Line-by-line код ревью
-  - Находит баги, security issues, best practices
-  - Поддержка Go
-  - Free для open source
-  - Комментирует прямо в PR
+  - Line-by-line code review
+  - Finds bugs, security issues, best practices
+  - Go support
+  - Free for open source
+  - Comments directly in PR
 
-- **Qodo (бывший Codium)** (https://qodo.ai)
-  - Генерация unit тестов автоматически
-  - Улучшение coverage
-  - Free для open source
+- **Qodo (formerly Codium)** (https://qodo.ai)
+  - Automatic unit test generation
+  - Coverage improvement
+  - Free for open source
 
 - **Sourcery** (https://sourcery.ai)
-  - Рефакторинг предложения
-  - Но больше для Python
+  - Refactoring suggestions
+  - But mostly for Python
 
-**Файл:** `.github/workflows/code-review.yml`
+**File:** `.github/workflows/code-review.yml`
 ```yaml
 name: AI Code Review
 on:
@@ -44,7 +44,7 @@ jobs:
 ```
 
 ### 1.2 Automated Test Generation
-**Qodo Cover** — генерирует unit тесты для Go
+**Qodo Cover** — generates unit tests for Go
 
 `.github/workflows/generate-tests.yml`
 ```yaml
@@ -71,7 +71,7 @@ jobs:
 ## 2. Dependabot + AI Security
 
 ### 2.1 Dependabot Auto-merge
-Автоматический merge безопасных обновлений зависимостей
+Automatic merge of safe dependency updates
 
 `.github/dependabot.yml`
 ```yaml
@@ -155,7 +155,7 @@ jobs:
 ## 3. AI-Powered PR Assistant
 
 ### 3.1 PR Description Generator
-**PR Agent** от Codium AI — автоматически генерирует описание PR
+**PR Agent** by Codium AI — automatically generates PR descriptions
 
 `.github/workflows/pr-agent.yml`
 ```yaml
@@ -176,15 +176,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-**Команды в PR:**
-- `/describe` — генерирует описание PR
-- `/review` — AI код ревью
-- `/improve` — предложения по улучшению
-- `/test` — генерирует unit тесты
-- `/ask "вопрос"` — задать вопрос о коде
+**Commands in PR:**
+- `/describe` — generates PR description
+- `/review` — AI code review
+- `/improve` — improvement suggestions
+- `/test` — generates unit tests
+- `/ask "question"` — ask a question about the code
 
 ### 3.2 Auto-labeling
-AI определяет labels для PR/Issues
+AI determines labels for PRs/Issues
 
 `.github/workflows/labeler.yml`
 ```yaml
@@ -345,7 +345,7 @@ jobs:
 ## 5. Release Automation
 
 ### 5.1 Semantic Release with AI Changelog
-**Release Drafter** — AI генерирует changelog
+**Release Drafter** — AI generates changelog
 
 `.github/workflows/release.yml`
 ```yaml
@@ -374,16 +374,16 @@ jobs:
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 categories:
-  - title: '🚀 Features'
+  - title: 'Features'
     labels:
       - 'feature'
       - 'enhancement'
-  - title: '🐛 Bug Fixes'
+  - title: 'Bug Fixes'
     labels:
       - 'fix'
       - 'bugfix'
       - 'bug'
-  - title: '🧰 Maintenance'
+  - title: 'Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
@@ -429,7 +429,7 @@ jobs:
 ## 6. AI Documentation
 
 ### 6.1 Auto-generate Docs
-**Mintlify** или **ReadMe.com** — AI генерирует документацию из кода
+**Mintlify** or **ReadMe.com** — AI generates documentation from code
 
 `.github/workflows/docs.yml`
 ```yaml
@@ -501,7 +501,7 @@ body:
 ```
 
 ### 7.2 AI Triage Bot
-**GitHub Copilot для Issues** или **Linear** интеграция
+**GitHub Copilot for Issues** or **Linear** integration
 
 `.github/workflows/issue-triage.yml`
 ```yaml
@@ -545,7 +545,7 @@ jobs:
 ## 8. Testing Automation
 
 ### 8.1 AI Test Coverage Bot
-**Codecov** с AI insights
+**Codecov** with AI insights
 
 `codecov.yml`
 ```yaml
@@ -569,7 +569,7 @@ github_checks:
 ```
 
 ### 8.2 Mutation Testing
-**Go-mutesting** для проверки качества тестов
+**Go-mutesting** for test quality verification
 
 `.github/workflows/mutation-test.yml`
 ```yaml
@@ -631,22 +631,22 @@ jobs:
 ## 10. Secrets Management
 
 ### 10.1 GitHub Secrets
-Нужно добавить:
+Need to add:
 ```bash
 # AI Services
-OPENAI_API_KEY          # Для PR Agent, test generation
-ANTHROPIC_API_KEY       # Для Claude integration в MediaMate
+OPENAI_API_KEY          # For PR Agent, test generation
+ANTHROPIC_API_KEY       # For Claude integration in MediaMate
 
 # Code Quality
-CODECOV_TOKEN           # Для code coverage
-SNYK_TOKEN              # Для security scanning
+CODECOV_TOKEN           # For code coverage
+SNYK_TOKEN              # For security scanning
 
 # Optional
-CODERABBIT_TOKEN        # Если нужен paid план
-SONAR_TOKEN             # SonarCloud (опционально)
+CODERABBIT_TOKEN        # If paid plan is needed
+SONAR_TOKEN             # SonarCloud (optional)
 ```
 
-Добавить через:
+Add via:
 ```bash
 gh secret set OPENAI_API_KEY
 gh secret set ANTHROPIC_API_KEY
@@ -657,59 +657,59 @@ gh secret set CODECOV_TOKEN
 
 ## 11. Recommended Setup Order
 
-### Phase 1: Базовая автоматизация
-1. ✅ CI/CD (build, test, lint)
-2. ✅ Docker multi-arch build
-3. ✅ Dependabot
-4. ✅ CodeQL security scanning
+### Phase 1: Basic automation
+1. CI/CD (build, test, lint)
+2. Docker multi-arch build
+3. Dependabot
+4. CodeQL security scanning
 
 ### Phase 2: AI Code Review
-5. ✅ CodeRabbit для PR review
-6. ✅ PR Agent для описаний
-7. ✅ Qodo для генерации тестов
+5. CodeRabbit for PR review
+6. PR Agent for descriptions
+7. Qodo for test generation
 
 ### Phase 3: Release & Docs
-8. ✅ Release Drafter
-9. ✅ GoReleaser
-10. ✅ Auto-docs генерация
+8. Release Drafter
+9. GoReleaser
+10. Auto-docs generation
 
 ### Phase 4: Advanced
-11. ✅ Mutation testing
-12. ✅ Performance benchmarks
-13. ✅ AI issue triage
+11. Mutation testing
+12. Performance benchmarks
+13. AI issue triage
 
 ---
 
-## Инструменты Summary
+## Tools Summary
 
-| Категория | Инструмент | Назначение | Free OSS? |
-|-----------|-----------|-----------|-----------|
-| Code Review | CodeRabbit | AI ревью кода | ✅ |
-| Test Gen | Qodo | Генерация unit тестов | ✅ |
-| PR Assistant | PR Agent | Описания, улучшения | ✅ |
-| Security | CodeQL + Snyk + Trivy | Уязвимости | ✅ |
-| Coverage | Codecov | Test coverage | ✅ |
-| Release | Release Drafter + GoReleaser | Changelog, релизы | ✅ |
-| Docs | MkDocs Material | Документация | ✅ |
-| Dependencies | Dependabot | Обновления зависимостей | ✅ |
+| Category | Tool | Purpose | Free OSS? |
+|----------|------|---------|-----------|
+| Code Review | CodeRabbit | AI code review | Yes |
+| Test Gen | Qodo | Unit test generation | Yes |
+| PR Assistant | PR Agent | Descriptions, improvements | Yes |
+| Security | CodeQL + Snyk + Trivy | Vulnerabilities | Yes |
+| Coverage | Codecov | Test coverage | Yes |
+| Release | Release Drafter + GoReleaser | Changelog, releases | Yes |
+| Docs | MkDocs Material | Documentation | Yes |
+| Dependencies | Dependabot | Dependency updates | Yes |
 
 ---
 
 ## Estimated Setup Time
 
-- **Phase 1 (Basic CI/CD):** 2-3 часа
-- **Phase 2 (AI Review):** 1-2 часа
-- **Phase 3 (Release):** 1 час
-- **Phase 4 (Advanced):** 2-3 часа
+- **Phase 1 (Basic CI/CD):** 2-3 hours
+- **Phase 2 (AI Review):** 1-2 hours
+- **Phase 3 (Release):** 1 hour
+- **Phase 4 (Advanced):** 2-3 hours
 
-**Total:** ~1 рабочий день для полной настройки
+**Total:** ~1 working day for full setup
 
 ---
 
 ## Next Steps
 
-1. Создать все `.github/workflows/*.yml` файлы
-2. Настроить secrets в GitHub
-3. Включить CodeRabbit в репе
-4. Создать первый PR и протестировать AI review
-5. Настроить branch protection rules (require PR review, CI pass)
+1. Create all `.github/workflows/*.yml` files
+2. Set up secrets in GitHub
+3. Enable CodeRabbit on the repo
+4. Create the first PR and test AI review
+5. Set up branch protection rules (require PR review, CI pass)

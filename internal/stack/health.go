@@ -24,6 +24,7 @@ var serviceEndpoints = map[string]string{
 	ComponentJellyfin:     ":8096/health",
 	ComponentPlex:         ":32400/identity",
 	ComponentGluetun:      ":8000/v1/publicip/ip",
+	ComponentFlareSolverr: ":8191/health",
 }
 
 // ServiceHealth holds the result of a single service health probe.

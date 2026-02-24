@@ -263,3 +263,72 @@ func TestETAInfinity(t *testing.T) {
 		t.Errorf("expected ETA 0 for infinity, got %d", torrents[0].ETA)
 	}
 }
+
+func TestGetPreferences(t *testing.T) {
+	client := newTestClient(t, loginAndHandle(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v2/app/preferences" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		json.NewEncoder(w).Encode(Preferences{
+			SavePath:        "/downloads",
+			TempPath:        "/downloads/temp",
+			TempPathEnabled: true,
+			WebUIPort:       8080,
+		})
+	}))
+
+	prefs, err := client.GetPreferences(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if prefs.SavePath != "/downloads" {
+		t.Errorf("expected save_path /downloads, got %s", prefs.SavePath)
+	}
+	if prefs.TempPath != "/downloads/temp" {
+		t.Errorf("expected temp_path /downloads/temp, got %s", prefs.TempPath)
+	}
+	if !prefs.TempPathEnabled {
+		t.Error("expected temp_path_enabled true")
+	}
+	if prefs.WebUIPort != 8080 {
+		t.Errorf("expected web_ui_port 8080, got %d", prefs.WebUIPort)
+	}
+}
+
+func TestSetPreferences(t *testing.T) {
+	client := newTestClient(t, loginAndHandle(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v2/app/setPreferences" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		r.ParseForm()
+		jsonStr := r.FormValue("json")
+		if jsonStr == "" {
+			t.Fatal("expected json form value, got empty")
+		}
+		var got map[string]any
+		if err := json.Unmarshal([]byte(jsonStr), &got); err != nil {
+			t.Fatalf("failed to parse json form value: %v", err)
+		}
+		if got["save_path"] != "/new/downloads" {
+			t.Errorf("expected save_path /new/downloads, got %v", got["save_path"])
+		}
+		if got["web_ui_port"] != float64(9090) {
+			t.Errorf("expected web_ui_port 9090, got %v", got["web_ui_port"])
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	err := client.SetPreferences(context.Background(), map[string]any{
+		"save_path":   "/new/downloads",
+		"web_ui_port": 9090,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}

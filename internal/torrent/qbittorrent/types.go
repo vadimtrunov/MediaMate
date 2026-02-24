@@ -1,5 +1,13 @@
 package qbittorrent
 
+// Preferences represents qBittorrent application preferences (subset of fields relevant for setup).
+type Preferences struct {
+	SavePath        string `json:"save_path"`
+	TempPath        string `json:"temp_path"`
+	TempPathEnabled bool   `json:"temp_path_enabled"`
+	WebUIPort       int    `json:"web_ui_port"`
+}
+
 // qbitTorrent represents a torrent from the qBittorrent Web API.
 type qbitTorrent struct {
 	Hash       string  `json:"hash"`

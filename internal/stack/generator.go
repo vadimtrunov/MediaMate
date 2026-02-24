@@ -41,6 +41,7 @@ type imageMap struct {
 	Jellyfin     string
 	Plex         string
 	Gluetun      string
+	FlareSolverr string
 	MediaMate    string
 }
 
@@ -56,6 +57,7 @@ func newImageMap() imageMap {
 		Jellyfin:     DockerImage(ComponentJellyfin),
 		Plex:         DockerImage(ComponentPlex),
 		Gluetun:      DockerImage(ComponentGluetun),
+		FlareSolverr: DockerImage(ComponentFlareSolverr),
 		MediaMate:    DockerImage(ComponentMediaMate),
 	}
 }
@@ -71,6 +73,7 @@ func (d templateData) HasDeluge() bool       { return d.HasComponent(ComponentDe
 func (d templateData) HasJellyfin() bool     { return d.HasComponent(ComponentJellyfin) }
 func (d templateData) HasPlex() bool         { return d.HasComponent(ComponentPlex) }
 func (d templateData) HasGluetun() bool      { return d.HasComponent(ComponentGluetun) }
+func (d templateData) HasFlareSolverr() bool { return d.HasComponent(ComponentProwlarr) } // auto-included with Prowlarr
 
 // Generator produces Docker Compose, .env, and mediamate.yaml files from a
 // Config.

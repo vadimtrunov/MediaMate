@@ -43,3 +43,32 @@ type radarrRootFolder struct {
 	ID   int    `json:"id"`
 	Path string `json:"path"`
 }
+
+// QualityProfile represents a Radarr quality profile (exported for setup).
+type QualityProfile struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+// RootFolder represents a Radarr root folder (exported for setup).
+type RootFolder struct {
+	ID   int    `json:"id"`
+	Path string `json:"path"`
+}
+
+// DownloadClientConfig represents a download client configuration in Radarr.
+type DownloadClientConfig struct {
+	Name           string                `json:"name"`
+	Implementation string                `json:"implementation"`
+	ConfigContract string                `json:"configContract"`
+	Enable         bool                  `json:"enable"`
+	Protocol       string                `json:"protocol"`
+	Priority       int                   `json:"priority"`
+	Fields         []DownloadClientField `json:"fields"`
+}
+
+// DownloadClientField represents a field in a download client config.
+type DownloadClientField struct {
+	Name  string `json:"name"`
+	Value any    `json:"value"`
+}

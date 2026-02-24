@@ -7,6 +7,7 @@ import (
 
 // mdV2Replacer escapes special characters for Telegram MarkdownV2.
 var mdV2Replacer = strings.NewReplacer(
+	`\`, `\\`,
 	"_", "\\_",
 	"*", "\\*",
 	"[", "\\[",

@@ -79,6 +79,22 @@ func TestSessionManager_Reset(t *testing.T) {
 	}
 }
 
+func TestSessionManager_NilFactory(t *testing.T) {
+	sm := newSessionManager(nil)
+	nilFactory := func() *agent.Agent { return nil }
+
+	a1 := sm.getOrCreate(100, nilFactory)
+	if a1 != nil {
+		t.Error("expected nil agent from nil factory")
+	}
+
+	// After nil factory, a successful factory should work (nil not cached).
+	a2 := sm.getOrCreate(100, testAgentFactory)
+	if a2 == nil {
+		t.Error("expected non-nil agent after nil factory retry")
+	}
+}
+
 func TestSessionManager_Concurrent(t *testing.T) {
 	sm := newSessionManager(nil)
 	factory := testAgentFactory

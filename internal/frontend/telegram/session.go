@@ -35,14 +35,27 @@ func (sm *sessionManager) isAllowed(userID int64) bool {
 }
 
 // getOrCreate returns an existing session or creates a new one using the factory.
+// If the factory returns nil, the result is not cached so the next call can retry.
 func (sm *sessionManager) getOrCreate(userID int64, factory AgentFactory) *agent.Agent {
 	sm.mu.Lock()
-	defer sm.mu.Unlock()
-
 	if a, ok := sm.sessions[userID]; ok {
+		sm.mu.Unlock()
 		return a
 	}
+	sm.mu.Unlock()
+
+	// Call factory without holding the lock to avoid blocking other users.
 	a := factory()
+	if a == nil {
+		return nil
+	}
+
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	// Double-check: another goroutine may have created the session.
+	if existing, ok := sm.sessions[userID]; ok {
+		return existing
+	}
 	sm.sessions[userID] = a
 	return a
 }

@@ -1,0 +1,266 @@
+services:
+{{- if .HasRadarr}}
+
+  radarr:
+    image: {{.Images.Radarr}}
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+    volumes:
+      - ${CONFIG_DIR}/radarr:/config
+      - ${MOVIES_DIR}:/movies
+      - ${DOWNLOADS_DIR}:/downloads
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- if .HasSonarr}}
+
+  sonarr:
+    image: {{.Images.Sonarr}}
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+    volumes:
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${TV_DIR}:/tv
+      - ${DOWNLOADS_DIR}:/downloads
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- if .HasReadarr}}
+
+  readarr:
+    image: {{.Images.Readarr}}
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+    volumes:
+      - ${CONFIG_DIR}/readarr:/config
+      - ${BOOKS_DIR}:/books
+      - ${DOWNLOADS_DIR}:/downloads
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- if .HasProwlarr}}
+
+  prowlarr:
+    image: {{.Images.Prowlarr}}
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+    volumes:
+      - ${CONFIG_DIR}/prowlarr:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- if .HasQBittorrent}}
+
+  qbittorrent:
+    image: {{.Images.QBittorrent}}
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+      - WEBUI_PORT=8080
+    volumes:
+      - ${CONFIG_DIR}/qbittorrent:/config
+      - ${DOWNLOADS_DIR}:/downloads
+{{- if .HasGluetun}}
+    network_mode: "service:gluetun"
+    restart: unless-stopped
+{{- else}}
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- end}}
+{{- if .HasTransmission}}
+
+  transmission:
+    image: {{.Images.Transmission}}
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+      - USER=admin
+      - PASS=${TRANSMISSION_PASSWORD}
+    volumes:
+      - ${CONFIG_DIR}/transmission:/config
+      - ${DOWNLOADS_DIR}:/downloads
+{{- if .HasGluetun}}
+    network_mode: "service:gluetun"
+    restart: unless-stopped
+{{- else}}
+    ports:
+      - "9091:9091"
+      - "51413:51413"
+      - "51413:51413/udp"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- end}}
+{{- if .HasDeluge}}
+
+  deluge:
+    image: {{.Images.Deluge}}
+    container_name: deluge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+      - DELUGE_LOGLEVEL=error
+    volumes:
+      - ${CONFIG_DIR}/deluge:/config
+      - ${DOWNLOADS_DIR}:/downloads
+{{- if .HasGluetun}}
+    network_mode: "service:gluetun"
+    restart: unless-stopped
+{{- else}}
+    ports:
+      - "8112:8112"
+      - "6881:6881"
+      - "6881:6881/udp"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- end}}
+{{- if .HasJellyfin}}
+
+  jellyfin:
+    image: {{.Images.Jellyfin}}
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+    volumes:
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${MOVIES_DIR}:/data/movies
+      - ${TV_DIR}:/data/tvshows
+      - ${BOOKS_DIR}:/data/books
+    ports:
+      - "8096:8096"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- if .HasPlex}}
+
+  plex:
+    image: {{.Images.Plex}}
+    container_name: plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Etc/UTC}
+      - VERSION=docker
+    volumes:
+      - ${CONFIG_DIR}/plex:/config
+      - ${MOVIES_DIR}:/movies
+      - ${TV_DIR}:/tv
+    ports:
+      - "32400:32400"
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+{{- if .HasGluetun}}
+
+  gluetun:
+    image: {{.Images.Gluetun}}
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-custom}
+      - VPN_TYPE=${VPN_TYPE:-wireguard}
+      - TZ=${TZ:-Etc/UTC}
+    volumes:
+      - ${CONFIG_DIR}/gluetun:/gluetun
+    ports:
+{{- if .HasQBittorrent}}
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+{{- end}}
+{{- if .HasTransmission}}
+      - "9091:9091"
+      - "51413:51413"
+      - "51413:51413/udp"
+{{- end}}
+{{- if .HasDeluge}}
+      - "8112:8112"
+      - "6881:6881"
+      - "6881:6881/udp"
+{{- end}}
+    restart: unless-stopped
+    networks:
+      - mediamate
+{{- end}}
+
+  mediamate:
+    image: {{.Images.MediaMate}}
+    container_name: mediamate
+    env_file:
+      - .env
+    volumes:
+      - ./mediamate.yaml:/app/configs/mediamate.yaml:ro
+    environment:
+      - TZ=${TZ:-Etc/UTC}
+    restart: unless-stopped
+    networks:
+      - mediamate
+    depends_on:
+{{- if .HasRadarr}}
+      - radarr
+{{- end}}
+{{- if .HasSonarr}}
+      - sonarr
+{{- end}}
+{{- if .HasQBittorrent}}
+      - qbittorrent
+{{- end}}
+{{- if .HasTransmission}}
+      - transmission
+{{- end}}
+{{- if .HasDeluge}}
+      - deluge
+{{- end}}
+{{- if .HasJellyfin}}
+      - jellyfin
+{{- end}}
+{{- if .HasPlex}}
+      - plex
+{{- end}}
+
+networks:
+  mediamate:
+    driver: bridge

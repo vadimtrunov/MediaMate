@@ -217,8 +217,8 @@ var mediaServerComponents = map[string]bool{
 }
 
 // serviceNameRe matches a top-level service definition in docker-compose.yml.
-// It matches lines like "  radarr:" (exactly two spaces of indent followed by
-// a service name and a colon).
+// It relies on exactly 2-space indentation, which is the format produced by
+// our Compose generator. Hand-edited files with different indent may not parse.
 var serviceNameRe = regexp.MustCompile(`^ {2}(\w[\w-]*):\s*$`)
 
 // LoadConfigFromCompose reads a docker-compose.yml and .env file from dir and

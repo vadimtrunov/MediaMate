@@ -40,7 +40,15 @@ type SetupRunner struct {
 }
 
 // NewSetupRunner creates a SetupRunner instance.
+// It panics if cfg or result is nil because these are required dependencies
+// and a nil value indicates a programming error in the caller.
 func NewSetupRunner(cfg *Config, result *GenerateResult, logger *slog.Logger) *SetupRunner {
+	if cfg == nil {
+		panic("stack.NewSetupRunner: cfg must not be nil")
+	}
+	if result == nil {
+		panic("stack.NewSetupRunner: result must not be nil")
+	}
 	if logger == nil {
 		logger = slog.Default()
 	}

@@ -31,6 +31,7 @@ func newRootCmd() *cobra.Command {
 		newQueryCmd(),
 		newStatusCmd(),
 		newConfigCmd(),
+		newBotCmd(),
 	)
 
 	return rootCmd

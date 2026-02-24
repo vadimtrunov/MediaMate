@@ -14,7 +14,10 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
 )
 
-const maxErrorBodyBytes = 4096
+const (
+	maxErrorBodyBytes = 4096
+	libraryPageSize   = 500
+)
 
 // Client implements core.MediaServer for Jellyfin.
 type Client struct {
@@ -77,22 +80,33 @@ func (c *Client) GetLink(ctx context.Context, itemName string) (string, error) {
 
 // GetLibraryItems gets all movie items in the Jellyfin library.
 func (c *Client) GetLibraryItems(ctx context.Context) ([]core.MediaItem, error) {
-	params := url.Values{
-		"IncludeItemTypes": {"Movie"},
-		"Recursive":        {"true"},
-		"Fields":           {"Overview"},
-	}
+	var (
+		all        []core.MediaItem
+		startIndex int
+	)
+	for {
+		params := url.Values{
+			"IncludeItemTypes": {"Movie"},
+			"Recursive":        {"true"},
+			"Fields":           {"Overview"},
+			"Limit":            {fmt.Sprintf("%d", libraryPageSize)},
+			"StartIndex":       {fmt.Sprintf("%d", startIndex)},
+		}
 
-	var resp jellyfinItemsResponse
-	if err := c.get(ctx, "/Items", params, &resp); err != nil {
-		return nil, fmt.Errorf("jellyfin list: %w", err)
-	}
+		var resp jellyfinItemsResponse
+		if err := c.get(ctx, "/Items", params, &resp); err != nil {
+			return nil, fmt.Errorf("jellyfin list: %w", err)
+		}
 
-	items := make([]core.MediaItem, 0, len(resp.Items))
-	for _, item := range resp.Items {
-		items = append(items, c.toMediaItem(item))
+		for _, item := range resp.Items {
+			all = append(all, c.toMediaItem(item))
+		}
+		startIndex += len(resp.Items)
+		if startIndex >= resp.TotalRecordCount || len(resp.Items) == 0 {
+			break
+		}
 	}
-	return items, nil
+	return all, nil
 }
 
 // Name returns the server name.
@@ -136,7 +150,8 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 func (c *Client) toMediaItem(item jellyfinItem) core.MediaItem {
 	var posterURL string
 	if _, ok := item.ImageTags["Primary"]; ok {
-		posterURL = fmt.Sprintf("%s/Items/%s/Images/Primary?api_key=%s", c.baseURL, item.ID, c.apiKey)
+		q := url.Values{"api_key": {c.apiKey}}
+		posterURL = fmt.Sprintf("%s/Items/%s/Images/Primary?%s", c.baseURL, item.ID, q.Encode())
 	}
 
 	return core.MediaItem{

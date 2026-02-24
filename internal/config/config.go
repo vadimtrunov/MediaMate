@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // Config represents the main application configuration
@@ -38,7 +38,7 @@ type Config struct {
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
 	Provider string `yaml:"provider"` // "claude", "openai", "ollama"
-	APIKey   string `yaml:"api_key"`
+	APIKey   string `json:"-" yaml:"api_key"`
 	Model    string `yaml:"model,omitempty"`
 	BaseURL  string `yaml:"base_url,omitempty"` // For Ollama
 }
@@ -46,7 +46,7 @@ type LLMConfig struct {
 // ArrConfig holds configuration for *arr backends (Radarr, Sonarr, Readarr)
 type ArrConfig struct {
 	URL            string `yaml:"url"`
-	APIKey         string `yaml:"api_key"`
+	APIKey         string `json:"-" yaml:"api_key"`
 	QualityProfile string `yaml:"quality_profile,omitempty"`
 	RootFolder     string `yaml:"root_folder,omitempty"`
 }
@@ -55,13 +55,13 @@ type ArrConfig struct {
 type QBittorrentConfig struct {
 	URL      string `yaml:"url"`
 	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Password string `json:"-" yaml:"password"`
 }
 
 // JellyfinConfig holds Jellyfin configuration
 type JellyfinConfig struct {
 	URL    string `yaml:"url"`
-	APIKey string `yaml:"api_key"`
+	APIKey string `json:"-" yaml:"api_key"`
 }
 
 // TelegramConfig holds Telegram bot configuration
@@ -72,7 +72,7 @@ type TelegramConfig struct {
 
 // TMDbConfig holds TMDb API configuration
 type TMDbConfig struct {
-	APIKey string `yaml:"api_key"`
+	APIKey string `json:"-" yaml:"api_key"`
 }
 
 // AppConfig holds application-level settings
@@ -103,7 +103,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
-	data, err := os.ReadFile(filepath.Clean(path)) // #nosec G304 -- path is validated by validateConfigPath
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -133,6 +133,7 @@ func (c *Config) applyEnvOverrides() {
 	c.applyAppEnv()
 }
 
+// applyLLMEnv applies LLM-related environment variable overrides.
 func (c *Config) applyLLMEnv() {
 	if v := os.Getenv("MEDIAMATE_LLM_PROVIDER"); v != "" {
 		c.LLM.Provider = v
@@ -148,18 +149,21 @@ func (c *Config) applyLLMEnv() {
 	}
 }
 
+// applyMetadataEnv applies metadata provider environment variable overrides.
 func (c *Config) applyMetadataEnv() {
 	if v := os.Getenv("MEDIAMATE_TMDB_API_KEY"); v != "" {
 		c.TMDb.APIKey = v
 	}
 }
 
+// applyBackendsEnv applies *arr backend environment variable overrides.
 func (c *Config) applyBackendsEnv() {
 	c.Radarr = applyArrEnv(c.Radarr, "MEDIAMATE_RADARR_URL", "MEDIAMATE_RADARR_API_KEY")
 	c.Sonarr = applyArrEnv(c.Sonarr, "MEDIAMATE_SONARR_URL", "MEDIAMATE_SONARR_API_KEY")
 	c.Readarr = applyArrEnv(c.Readarr, "MEDIAMATE_READARR_URL", "MEDIAMATE_READARR_API_KEY")
 }
 
+// applyArrEnv applies URL and API key environment overrides for an *arr backend.
 func applyArrEnv(cfg *ArrConfig, urlEnv, keyEnv string) *ArrConfig {
 	envURL := os.Getenv(urlEnv)
 	envKey := os.Getenv(keyEnv)
@@ -178,6 +182,7 @@ func applyArrEnv(cfg *ArrConfig, urlEnv, keyEnv string) *ArrConfig {
 	return cfg
 }
 
+// applyTorrentEnv applies qBittorrent environment variable overrides.
 func (c *Config) applyTorrentEnv() {
 	qbitURL := os.Getenv("MEDIAMATE_QBITTORRENT_URL")
 	qbitUser := os.Getenv("MEDIAMATE_QBITTORRENT_USERNAME")
@@ -198,6 +203,7 @@ func (c *Config) applyTorrentEnv() {
 	}
 }
 
+// applyMediaServerEnv applies Jellyfin environment variable overrides.
 func (c *Config) applyMediaServerEnv() {
 	jellyfinURL := os.Getenv("MEDIAMATE_JELLYFIN_URL")
 	jellyfinKey := os.Getenv("MEDIAMATE_JELLYFIN_API_KEY")
@@ -214,6 +220,7 @@ func (c *Config) applyMediaServerEnv() {
 	}
 }
 
+// applyFrontendsEnv applies Telegram environment variable overrides.
 func (c *Config) applyFrontendsEnv() {
 	telegramToken := os.Getenv("MEDIAMATE_TELEGRAM_BOT_TOKEN")
 	if telegramToken != "" {
@@ -224,6 +231,7 @@ func (c *Config) applyFrontendsEnv() {
 	}
 }
 
+// applyAppEnv applies application-level environment variable overrides.
 func (c *Config) applyAppEnv() {
 	if v := os.Getenv("MEDIAMATE_LOG_LEVEL"); v != "" {
 		c.App.LogLevel = v
@@ -256,6 +264,7 @@ func (c *Config) Validate() error {
 	return c.validateApp()
 }
 
+// validateLLM checks that the LLM provider and API key are properly configured.
 func (c *Config) validateLLM() error {
 	if c.LLM.Provider == "" {
 		return fmt.Errorf("llm.provider is required")
@@ -269,6 +278,7 @@ func (c *Config) validateLLM() error {
 	return nil
 }
 
+// validateMetadata checks that the TMDb API key is set.
 func (c *Config) validateMetadata() error {
 	if c.TMDb.APIKey == "" {
 		return fmt.Errorf("tmdb.api_key is required")
@@ -276,6 +286,7 @@ func (c *Config) validateMetadata() error {
 	return nil
 }
 
+// validateArrConfig validates a single *arr backend configuration.
 func validateArrConfig(cfg *ArrConfig, name string) error {
 	if cfg == nil {
 		return nil
@@ -292,6 +303,7 @@ func validateArrConfig(cfg *ArrConfig, name string) error {
 	return nil
 }
 
+// validateBackends checks that at least one media backend is configured and valid.
 func (c *Config) validateBackends() error {
 	if c.Radarr == nil && c.Sonarr == nil && c.Readarr == nil {
 		return fmt.Errorf("at least one media backend (radarr, sonarr, readarr) must be configured")
@@ -307,6 +319,7 @@ func (c *Config) validateBackends() error {
 	return validateArrConfig(c.Readarr, "readarr")
 }
 
+// validateOptionalServices validates qBittorrent, Jellyfin, and Telegram configs if present.
 func (c *Config) validateOptionalServices() error {
 	if c.QBittorrent != nil {
 		if c.QBittorrent.URL == "" {
@@ -344,6 +357,7 @@ func (c *Config) validateOptionalServices() error {
 	return nil
 }
 
+// validateURL checks that a URL has a valid http/https scheme and host.
 func validateURL(rawURL, fieldName string) error {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -358,17 +372,20 @@ func validateURL(rawURL, fieldName string) error {
 	return nil
 }
 
+// validLogLevels defines the accepted log level strings.
 var validLogLevels = map[string]bool{
 	"debug": true, "info": true, "warn": true, "warning": true, "error": true,
 }
 
+// validateApp checks that the app log level is valid.
 func (c *Config) validateApp() error {
 	if !validLogLevels[c.App.LogLevel] {
-		return fmt.Errorf("app.log_level must be one of: debug, info, warn, error; got %q", c.App.LogLevel)
+		return fmt.Errorf("app.log_level must be one of: debug, info, warn, warning, error; got %q", c.App.LogLevel)
 	}
 	return nil
 }
 
+// setDefaults applies default values for optional configuration fields.
 func (c *Config) setDefaults() {
 	if c.App.LogLevel == "" {
 		c.App.LogLevel = "info"

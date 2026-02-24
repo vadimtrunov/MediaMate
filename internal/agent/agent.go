@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// maxToolIterations limits the number of consecutive tool-call rounds per message.
 	maxToolIterations = 10
 	systemPrompt      = `You are MediaMate, a helpful AI assistant for managing a personal media server.
 You help users search for movies, get recommendations, check download status, and manage their media library.
@@ -101,6 +102,7 @@ func (a *Agent) HandleMessage(ctx context.Context, userMessage string) (string, 
 	return "", fmt.Errorf("agent exceeded maximum tool iterations (%d)", maxToolIterations)
 }
 
+// executeTool dispatches a tool call to the appropriate handler and returns the result.
 func (a *Agent) executeTool(ctx context.Context, call core.ToolCall) (string, error) {
 	a.logger.Debug("executing tool", slog.String("tool", call.Name), slog.Any("args", call.Arguments))
 

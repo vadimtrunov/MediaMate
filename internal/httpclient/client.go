@@ -78,7 +78,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 			}
 		}
 
-		resp, err := c.http.Do(req)
+		resp, err := c.http.Do(req) //nolint:gosec // URL is from validated config, not user input
 		if err != nil {
 			if req.Context().Err() != nil {
 				return nil, req.Context().Err()
@@ -106,6 +106,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return nil, fmt.Errorf("request failed after %d attempts", c.config.MaxRetries)
 }
 
+// waitBeforeRetry sleeps for the calculated backoff duration before the next retry attempt.
 func (c *Client) waitBeforeRetry(ctx context.Context, attempt int, lastResp *http.Response, url string) error {
 	delay := c.backoff(attempt)
 	if d := retryAfterDelay(lastResp); d > delay {
@@ -129,6 +130,7 @@ func (c *Client) waitBeforeRetry(ctx context.Context, attempt int, lastResp *htt
 	}
 }
 
+// retryAfterDelay parses the Retry-After header from a response, if present.
 func retryAfterDelay(resp *http.Response) time.Duration {
 	if resp == nil {
 		return 0
@@ -144,6 +146,7 @@ func retryAfterDelay(resp *http.Response) time.Duration {
 	return time.Duration(seconds) * time.Second
 }
 
+// replayBody resets the request body for retries using GetBody.
 func replayBody(req *http.Request) error {
 	if req.GetBody == nil {
 		return nil
@@ -192,6 +195,6 @@ func (c *Client) backoff(attempt int) time.Duration {
 		delay = float64(c.config.MaxDelay)
 	}
 	// Add 20% jitter — cryptographic randomness not needed for backoff
-	jitter := delay * 0.2 * rand.Float64() // #nosec G404
+	jitter := delay * 0.2 * rand.Float64() //nolint:gosec // crypto rand not needed for backoff jitter
 	return time.Duration(delay + jitter)
 }

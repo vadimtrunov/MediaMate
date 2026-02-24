@@ -125,6 +125,7 @@ func (c *Client) ListItems(ctx context.Context) ([]core.MediaItem, error) {
 // Type returns "radarr".
 func (c *Client) Type() string { return "radarr" }
 
+// resolveQualityProfileID finds the quality profile ID by name, or defaults to the first available.
 func (c *Client) resolveQualityProfileID(ctx context.Context) (int, error) {
 	var profiles []radarrQualityProfile
 	if err := c.get(ctx, "/api/v3/qualityprofile", nil, &profiles); err != nil {
@@ -148,6 +149,7 @@ func (c *Client) resolveQualityProfileID(ctx context.Context) (int, error) {
 	return profiles[0].ID, nil
 }
 
+// resolveRootFolder returns the configured root folder or defaults to the first available.
 func (c *Client) resolveRootFolder(ctx context.Context) (string, error) {
 	if c.rootFolder != "" {
 		return c.rootFolder, nil
@@ -163,6 +165,7 @@ func (c *Client) resolveRootFolder(ctx context.Context) (string, error) {
 	return folders[0].Path, nil
 }
 
+// get performs an authenticated GET request to the Radarr API and decodes the JSON response.
 func (c *Client) get(ctx context.Context, path string, params url.Values, result any) error {
 	u, err := url.Parse(c.baseURL + path)
 	if err != nil {
@@ -196,6 +199,7 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 	return nil
 }
 
+// post performs an authenticated POST request to the Radarr API with a JSON body.
 func (c *Client) post(ctx context.Context, path string, body, result any) error {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
@@ -231,6 +235,7 @@ func (c *Client) post(ctx context.Context, path string, body, result any) error 
 	return nil
 }
 
+// toMediaItem converts a Radarr movie to a core.MediaItem.
 func toMediaItem(m radarrMovie) core.MediaItem {
 	return core.MediaItem{
 		ID:          strconv.Itoa(m.ID),
@@ -246,6 +251,7 @@ func toMediaItem(m radarrMovie) core.MediaItem {
 	}
 }
 
+// toMediaStatus converts a Radarr movie to a core.MediaStatus.
 func toMediaStatus(m radarrMovie) *core.MediaStatus {
 	status := "wanted"
 	if m.HasFile {

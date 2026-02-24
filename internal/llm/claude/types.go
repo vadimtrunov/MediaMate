@@ -64,6 +64,7 @@ type apiErrorResponse struct {
 	Error apiError `json:"error"`
 }
 
+// apiError holds the error type and message from a Claude API error.
 type apiError struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`

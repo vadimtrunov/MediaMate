@@ -5,11 +5,13 @@ import (
 	"time"
 )
 
+// cacheEntry holds a cached value and its expiration time.
 type cacheEntry struct {
 	data      any
 	expiresAt time.Time
 }
 
+// cache is a thread-safe in-memory cache with TTL-based expiration.
 type cache struct {
 	mu      sync.RWMutex
 	entries map[string]cacheEntry
@@ -17,6 +19,7 @@ type cache struct {
 	writes  int
 }
 
+// newCache creates a new cache with the given TTL for entries.
 func newCache(ttl time.Duration) *cache {
 	return &cache{
 		entries: make(map[string]cacheEntry),
@@ -24,6 +27,7 @@ func newCache(ttl time.Duration) *cache {
 	}
 }
 
+// Get returns the cached value for key, or false if not found or expired.
 func (c *cache) Get(key string) (any, bool) {
 	now := time.Now()
 	c.mu.RLock()
@@ -52,6 +56,7 @@ func (c *cache) Get(key string) (any, bool) {
 	return nil, false
 }
 
+// Set stores a value in the cache with the configured TTL.
 func (c *cache) Set(key string, value any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

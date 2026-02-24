@@ -2,6 +2,7 @@ package agent
 
 import "github.com/vadimtrunov/MediaMate/internal/core"
 
+// toolDefinitions returns the list of tool definitions available to the LLM.
 func toolDefinitions() []core.Tool {
 	return []core.Tool{
 		toolSearchMovie(),
@@ -13,6 +14,7 @@ func toolDefinitions() []core.Tool {
 	}
 }
 
+// tmdbIDParam returns a JSON Schema object requiring a single tmdb_id integer parameter.
 func tmdbIDParam(desc string) map[string]any {
 	return map[string]any{
 		"type": "object",
@@ -26,6 +28,7 @@ func tmdbIDParam(desc string) map[string]any {
 	}
 }
 
+// toolSearchMovie returns the search_movie tool definition.
 func toolSearchMovie() core.Tool {
 	return core.Tool{
 		Name:        "search_movie",
@@ -47,6 +50,7 @@ func toolSearchMovie() core.Tool {
 	}
 }
 
+// toolDefGetMovieDetails returns the get_movie_details tool definition.
 func toolDefGetMovieDetails() core.Tool {
 	return core.Tool{
 		Name: "get_movie_details",
@@ -56,6 +60,7 @@ func toolDefGetMovieDetails() core.Tool {
 	}
 }
 
+// toolDefDownloadMovie returns the download_movie tool definition.
 func toolDefDownloadMovie() core.Tool {
 	return core.Tool{
 		Name: "download_movie",
@@ -78,6 +83,7 @@ func toolDefDownloadMovie() core.Tool {
 	}
 }
 
+// toolDefGetDownloadStatus returns the get_download_status tool definition.
 func toolDefGetDownloadStatus() core.Tool {
 	return core.Tool{
 		Name: "get_download_status",
@@ -87,7 +93,7 @@ func toolDefGetDownloadStatus() core.Tool {
 			"type": "object",
 			"properties": map[string]any{
 				"radarr_id": map[string]any{
-					"type":        "string",
+					"type":        "integer",
 					"description": "The Radarr ID of the movie",
 				},
 			},
@@ -96,6 +102,7 @@ func toolDefGetDownloadStatus() core.Tool {
 	}
 }
 
+// toolDefRecommendSimilar returns the recommend_similar tool definition.
 func toolDefRecommendSimilar() core.Tool {
 	return core.Tool{
 		Name:        "recommend_similar",
@@ -104,6 +111,7 @@ func toolDefRecommendSimilar() core.Tool {
 	}
 }
 
+// toolDefListDownloads returns the list_downloads tool definition.
 func toolDefListDownloads() core.Tool {
 	return core.Tool{
 		Name:        "list_downloads",

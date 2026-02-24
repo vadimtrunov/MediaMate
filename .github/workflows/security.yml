@@ -51,23 +51,3 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
-
-  gosec:
-    name: Go Security Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.22.4
-        with:
-          # G304: File path from user input - validated by validateConfigPath before use
-          # G117: Deprecated TLS check - false positive in standard library usage
-          args: '-exclude=G304,G117 -fmt sarif -out gosec-results.sarif ./...'
-
-      - name: Upload Gosec results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'gosec-results.sarif'

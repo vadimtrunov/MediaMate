@@ -54,6 +54,8 @@ func ContextWithLogger(ctx context.Context, logger *slog.Logger) context.Context
 	return context.WithValue(ctx, loggerKey, logger)
 }
 
+// contextKey is an unexported type for context value keys to avoid collisions.
 type contextKey string
 
+// loggerKey is the context key used to store and retrieve the logger.
 const loggerKey contextKey = "logger"

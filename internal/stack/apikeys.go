@@ -147,7 +147,7 @@ func UpdateMediaMateConfig(configPath string, keys ServiceAPIKeys) error {
 		content = strings.ReplaceAll(content, placeholder, key)
 	}
 
-	if err := os.WriteFile(configPath, []byte(content), permFile); err != nil {
+	if err := os.WriteFile(configPath, []byte(content), permSecret); err != nil {
 		return fmt.Errorf("write %s: %w", configPath, err)
 	}
 

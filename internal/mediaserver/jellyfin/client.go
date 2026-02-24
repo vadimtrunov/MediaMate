@@ -14,6 +14,8 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
 )
 
+const maxErrorBodyBytes = 4096
+
 // Client implements core.MediaServer for Jellyfin.
 type Client struct {
 	baseURL string
@@ -88,7 +90,7 @@ func (c *Client) GetLibraryItems(ctx context.Context) ([]core.MediaItem, error) 
 
 	items := make([]core.MediaItem, 0, len(resp.Items))
 	for _, item := range resp.Items {
-		items = append(items, toMediaItem(item, c.baseURL))
+		items = append(items, c.toMediaItem(item))
 	}
 	return items, nil
 }
@@ -120,7 +122,7 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodyBytes))
 		return fmt.Errorf("jellyfin API error %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -131,10 +133,10 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 }
 
 // toMediaItem converts a Jellyfin item to a core.MediaItem.
-func toMediaItem(item jellyfinItem, baseURL string) core.MediaItem {
+func (c *Client) toMediaItem(item jellyfinItem) core.MediaItem {
 	var posterURL string
 	if _, ok := item.ImageTags["Primary"]; ok {
-		posterURL = fmt.Sprintf("%s/Items/%s/Images/Primary", baseURL, item.ID)
+		posterURL = fmt.Sprintf("%s/Items/%s/Images/Primary?api_key=%s", c.baseURL, item.ID, c.apiKey)
 	}
 
 	return core.MediaItem{

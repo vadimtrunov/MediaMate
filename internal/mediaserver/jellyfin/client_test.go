@@ -149,7 +149,7 @@ func TestGetLibraryItems(t *testing.T) {
 		t.Fatalf("expected 2 items, got %d", len(items))
 	}
 
-	assertLibraryItem(t, items[0], "Inception", 2010, 8.4, serverURL+"/Items/item-1/Images/Primary")
+	assertLibraryItem(t, items[0], "Inception", 2010, 8.4, serverURL+"/Items/item-1/Images/Primary?api_key=test-api-key")
 	assertLibraryItem(t, items[1], "The Matrix", 1999, 8.7, "")
 }
 

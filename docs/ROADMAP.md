@@ -8,14 +8,14 @@ We build incrementally — each phase is a fully working product. Start with the
 
 ## Phase 0: Foundation (Week 1-2)
 
-### 0.1 Project Structure
-- [ ] Set up Go module structure
-- [ ] Define packages: `cmd/`, `internal/`, `pkg/`
-- [ ] Set up CI/CD (GitHub Actions)
-- [ ] Makefile for builds
+### 0.1 Project Structure ✅
+- [x] Set up Go module structure
+- [x] Define packages: `cmd/`, `internal/`, `pkg/`
+- [x] Set up CI/CD (GitHub Actions)
+- [x] Makefile for builds
 - [ ] Docker multi-stage build for ARM64 and AMD64
 
-### 0.2 Core Interfaces
+### 0.2 Core Interfaces ✅
 ```go
 // internal/core/interfaces.go
 type LLMProvider interface {}
@@ -25,16 +25,16 @@ type MediaServer interface {}
 type Frontend interface {}
 ```
 
-### 0.3 Configuration System
-- [ ] YAML configuration (`internal/config/`)
-- [ ] Environment variables override
-- [ ] Config validation
-- [ ] Example configs: `configs/mediamate.example.yaml`
+### 0.3 Configuration System ✅
+- [x] YAML configuration (`internal/config/`)
+- [x] Environment variables override
+- [x] Config validation
+- [x] Example configs: `configs/mediamate.example.yaml`
 
-### 0.4 Logging & Observability
-- [ ] Structured logging (zerolog or slog)
-- [ ] Log levels
-- [ ] Context-aware logging
+### 0.4 Logging & Observability ✅
+- [x] Structured logging (zerolog or slog)
+- [x] Log levels
+- [x] Context-aware logging
 
 **Deliverable:** Empty project skeleton with interfaces and config
 
@@ -42,12 +42,12 @@ type Frontend interface {}
 
 ## Phase 1: MVP Backend (Week 3-5)
 
-### 1.1 LLM Integration (Claude)
-- [ ] `internal/llm/claude/` — Claude API client
-- [ ] Tool calling support (Claude function calling)
-- [ ] Retry logic and error handling
+### 1.1 LLM Integration (Claude) ✅
+- [x] `internal/llm/claude/` — Claude API client
+- [x] Tool calling support (Claude function calling)
+- [x] Retry logic and error handling
 - [ ] Rate limiting
-- [ ] Tests with mock LLM
+- [x] Tests with mock LLM
 
 **Tools for Claude:**
 ```go
@@ -58,32 +58,32 @@ type Frontend interface {}
 - RecommendSimilar(movieID int) []Movie
 ```
 
-### 1.2 TMDb Integration
-- [ ] `internal/metadata/tmdb/` — TMDb API client
-- [ ] Movie search
-- [ ] Recommendations
-- [ ] Movie details (rating, description, posters)
-- [ ] Caching for popular queries
+### 1.2 TMDb Integration ✅
+- [x] `internal/metadata/tmdb/` — TMDb API client
+- [x] Movie search
+- [x] Recommendations
+- [x] Movie details (rating, description, posters)
+- [x] Caching for popular queries
 
-### 1.3 Radarr Integration
-- [ ] `internal/backend/radarr/` — Radarr API client
-- [ ] Release search
-- [ ] Adding movies to library
-- [ ] Status monitoring
-- [ ] Quality profiles
+### 1.3 Radarr Integration ✅
+- [x] `internal/backend/radarr/` — Radarr API client
+- [x] Release search
+- [x] Adding movies to library
+- [x] Status monitoring
+- [x] Quality profiles
 
-### 1.4 qBittorrent Integration
-- [ ] `internal/torrent/qbittorrent/` — qBittorrent Web API client
-- [ ] Getting torrent list
-- [ ] Download progress
-- [ ] Management (pause/resume)
+### 1.4 qBittorrent Integration ✅
+- [x] `internal/torrent/qbittorrent/` — qBittorrent Web API client
+- [x] Getting torrent list
+- [x] Download progress
+- [x] Management (pause/resume)
 
-### 1.5 Core Orchestration
-- [ ] `internal/agent/` — AI agent orchestrator
-- [ ] Intent parsing from LLM
-- [ ] Mapping tool calls to actual API calls
-- [ ] Conversation state management
-- [ ] Multi-step flows (search → confirm → download)
+### 1.5 Core Orchestration ✅
+- [x] `internal/agent/` — AI agent orchestrator
+- [x] Intent parsing from LLM
+- [x] Mapping tool calls to actual API calls
+- [x] Conversation state management
+- [x] Multi-step flows (search → confirm → download)
 
 **Deliverable:** Backend that understands requests and manages media via Radarr + qBittorrent
 
@@ -91,14 +91,14 @@ type Frontend interface {}
 
 ## Phase 2: CLI Frontend (Week 6)
 
-### 2.1 Interactive CLI
-- [ ] `cmd/mediamate/chat.go` — interactive chat in terminal
-- [ ] Message history (arrows up/down)
-- [ ] Beautiful output (bubbles/lipgloss)
+### 2.1 Interactive CLI ✅
+- [x] `cmd/mediamate/chat.go` — interactive chat in terminal
+- [x] Message history (arrows up/down)
+- [x] Beautiful output (bubbles/lipgloss)
 - [ ] Streaming responses from LLM
-- [ ] Colored output (movies, statuses)
+- [x] Colored output (movies, statuses)
 
-### 2.2 CLI Commands
+### 2.2 CLI Commands ✅
 ```bash
 mediamate chat              # Interactive chat
 mediamate query "download Dune"  # One-off query
@@ -112,19 +112,19 @@ mediamate config validate   # Config validation
 
 ## Phase 3: Telegram Frontend (Week 7-8)
 
-### 3.1 Telegram Bot
-- [ ] `internal/frontend/telegram/` — Telegram Bot API
-- [ ] Text message handling
-- [ ] Inline keyboard for confirmations
-- [ ] Streaming responses (typing indicator)
-- [ ] Multi-user support (user isolation)
-- [ ] Admin whitelist (only allowed user IDs)
+### 3.1 Telegram Bot ✅
+- [x] `internal/frontend/telegram/` — Telegram Bot API
+- [x] Text message handling
+- [x] Inline keyboard for confirmations
+- [x] Streaming responses (typing indicator)
+- [x] Multi-user support (user isolation)
+- [x] Admin whitelist (only allowed user IDs)
 
-### 3.2 Rich Media
-- [ ] Sending movie posters
-- [ ] Recommendation formatting (Markdown)
+### 3.2 Rich Media ✅
+- [x] Sending movie posters
+- [x] Recommendation formatting (Markdown)
 - [ ] Progress bars for downloads
-- [ ] Callback buttons (download 1/2/3)
+- [x] Callback buttons (download 1/2/3)
 
 **Deliverable:** v0.1 — Full MVP with Telegram + CLI
 
@@ -132,11 +132,11 @@ mediamate config validate   # Config validation
 
 ## Phase 4: Jellyfin & Stack Management (Week 9-10)
 
-### 4.1 Jellyfin Integration
-- [ ] `internal/mediaserver/jellyfin/` — Jellyfin API
-- [ ] Movie availability check
-- [ ] Generating watch links
-- [ ] Webhook for new content notifications
+### 4.1 Jellyfin Integration ✅
+- [x] `internal/mediaserver/jellyfin/` — Jellyfin API
+- [x] Movie availability check
+- [x] Generating watch links
+- [ ] Webhook for new content notifications (deferred to Phase 7.3)
 
 ### 4.2 Docker Compose Stack
 - [ ] `mediamate stack init` — interactive wizard

@@ -11,6 +11,8 @@ func toolDefinitions() []core.Tool {
 		toolDefGetDownloadStatus(),
 		toolDefRecommendSimilar(),
 		toolDefListDownloads(),
+		toolDefCheckAvailability(),
+		toolDefGetWatchLink(),
 	}
 }
 
@@ -120,5 +122,37 @@ func toolDefListDownloads() core.Tool {
 			"type":       "object",
 			"properties": map[string]any{},
 		},
+	}
+}
+
+// titleParam returns a JSON Schema object requiring a single title string parameter.
+func titleParam(desc string) map[string]any {
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"title": map[string]any{
+				"type":        "string",
+				"description": desc,
+			},
+		},
+		"required": []string{"title"},
+	}
+}
+
+// toolDefCheckAvailability returns the check_availability tool definition.
+func toolDefCheckAvailability() core.Tool {
+	return core.Tool{
+		Name:        "check_availability",
+		Description: "Check if a movie is available to watch on the media server (Jellyfin).",
+		Parameters:  titleParam("The movie title to check availability for"),
+	}
+}
+
+// toolDefGetWatchLink returns the get_watch_link tool definition.
+func toolDefGetWatchLink() core.Tool {
+	return core.Tool{
+		Name:        "get_watch_link",
+		Description: "Get a direct link to watch a movie on the media server (Jellyfin).",
+		Parameters:  titleParam("The movie title to get the watch link for"),
 	}
 }

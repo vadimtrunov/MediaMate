@@ -100,10 +100,9 @@ func renderConfigMediaServer(b *strings.Builder, cfg *Config) {
 		}
 	case ComponentPlex:
 		if cfg.HasComponent(ComponentPlex) {
-			b.WriteString("# Plex support requires implementation\n")
-			b.WriteString("# plex:\n")
-			b.WriteString("#   url: \"http://plex:32400\"\n")
-			b.WriteString("#   token: ${PLEX_TOKEN}\n\n")
+			b.WriteString("plex:\n")
+			b.WriteString("  url: \"http://plex:32400\"\n")
+			b.WriteString("  token: ${PLEX_TOKEN}\n\n")
 		}
 	}
 }

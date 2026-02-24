@@ -14,12 +14,14 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
 )
 
+// maxErrBodySize caps the number of bytes read from error response bodies to prevent OOM.
+const maxErrBodySize = 1 << 16 // 64 KB
+
 // Client is the Prowlarr API v1 client.
 type Client struct {
 	baseURL string
 	apiKey  string
 	http    *httpclient.Client
-	logger  *slog.Logger
 }
 
 // New creates a new Prowlarr client.
@@ -28,7 +30,6 @@ func New(baseURL, apiKey string, logger *slog.Logger) *Client {
 		baseURL: strings.TrimRight(baseURL, "/"),
 		apiKey:  apiKey,
 		http:    httpclient.New(httpclient.DefaultConfig(), logger),
-		logger:  logger,
 	}
 }
 
@@ -106,8 +107,8 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("prowlarr API error %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -124,8 +125,11 @@ func (c *Client) post(ctx context.Context, path string, body, result any) error 
 		return fmt.Errorf("marshal request body: %w", err)
 	}
 
-	u := c.baseURL + path
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(jsonBody))
+	u, err := url.Parse(c.baseURL + path)
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(jsonBody))
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}
@@ -143,7 +147,7 @@ func (c *Client) post(ctx context.Context, path string, body, result any) error 
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("prowlarr API error %d: %s", resp.StatusCode, string(respBody))
 	}
 

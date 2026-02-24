@@ -332,3 +332,21 @@ func TestSetPreferences(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestSetPreferencesNilMap(t *testing.T) {
+	client := newTestClient(t, loginAndHandle(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v2/app/setPreferences" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		r.ParseForm()
+		jsonStr := r.FormValue("json")
+		if jsonStr != "{}" {
+			t.Errorf("expected empty JSON object for nil prefs, got %s", jsonStr)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	if err := client.SetPreferences(context.Background(), nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}

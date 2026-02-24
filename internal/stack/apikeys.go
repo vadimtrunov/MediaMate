@@ -121,11 +121,8 @@ func UpdateEnvFile(envPath string, keys ServiceAPIKeys) error {
 	}
 
 	output := strings.Join(lines, "\n")
-	if err := os.WriteFile(envPath, []byte(output), permSecret); err != nil {
+	if err := writeFileAtomic(envPath, []byte(output), permSecret); err != nil {
 		return fmt.Errorf("write %s: %w", envPath, err)
-	}
-	if err := os.Chmod(envPath, permSecret); err != nil {
-		return fmt.Errorf("chmod %s: %w", envPath, err)
 	}
 
 	return nil
@@ -150,12 +147,37 @@ func UpdateMediaMateConfig(configPath string, keys ServiceAPIKeys) error {
 		content = strings.ReplaceAll(content, placeholder, key)
 	}
 
-	if err := os.WriteFile(configPath, []byte(content), permSecret); err != nil {
+	if err := writeFileAtomic(configPath, []byte(content), permSecret); err != nil {
 		return fmt.Errorf("write %s: %w", configPath, err)
 	}
-	if err := os.Chmod(configPath, permSecret); err != nil {
-		return fmt.Errorf("chmod %s: %w", configPath, err)
-	}
 
+	return nil
+}
+
+// writeFileAtomic writes data to a temporary file and renames it to path,
+// ensuring the target file is never left in a partially-written state.
+func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	dir := filepath.Dir(path)
+	tmp, err := os.CreateTemp(dir, ".tmp-*")
+	if err != nil {
+		return fmt.Errorf("create temp file in %s: %w", dir, err)
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		return fmt.Errorf("write temp file: %w", err)
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		_ = tmp.Close()
+		return fmt.Errorf("chmod temp file: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("close temp file: %w", err)
+	}
+	if err := os.Rename(tmpPath, filepath.Clean(path)); err != nil { //nolint:gosec // path comes from internal callers, not user input
+		return fmt.Errorf("rename %s -> %s: %w", tmpPath, path, err)
+	}
 	return nil
 }

@@ -342,42 +342,55 @@ func TestCreateRootFolder(t *testing.T) {
 	}
 }
 
+func assertDownloadClientRequest(t *testing.T, r *http.Request) {
+	t.Helper()
+	if r.Method != http.MethodPost {
+		t.Errorf("expected POST, got %s", r.Method)
+	}
+	if r.URL.Path != "/api/v3/downloadclient" {
+		t.Errorf("unexpected path: %s", r.URL.Path)
+	}
+	if r.Header.Get("X-Api-Key") != "test-api-key" {
+		t.Errorf("expected X-Api-Key=test-api-key, got %s", r.Header.Get("X-Api-Key"))
+	}
+	var cfg DownloadClientConfig
+	json.NewDecoder(r.Body).Decode(&cfg)
+	if cfg.Name != "Transmission" {
+		t.Errorf("expected name Transmission, got %s", cfg.Name)
+	}
+	if cfg.Implementation != "Transmission" {
+		t.Errorf("expected implementation Transmission, got %s", cfg.Implementation)
+	}
+	if cfg.ConfigContract != "TransmissionSettings" {
+		t.Errorf("expected config contract TransmissionSettings, got %s", cfg.ConfigContract)
+	}
+	if !cfg.Enable {
+		t.Error("expected enable=true")
+	}
+	if cfg.Protocol != "torrent" {
+		t.Errorf("expected protocol torrent, got %s", cfg.Protocol)
+	}
+	if cfg.Priority != 1 {
+		t.Errorf("expected priority 1, got %d", cfg.Priority)
+	}
+	if len(cfg.Fields) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(cfg.Fields))
+	}
+	fields := make(map[string]any, len(cfg.Fields))
+	for _, f := range cfg.Fields {
+		fields[f.Name] = f.Value
+	}
+	if fields["host"] != "localhost" {
+		t.Errorf("expected host=localhost, got %v", fields["host"])
+	}
+	if fields["port"] != float64(9091) {
+		t.Errorf("expected port=9091, got %v", fields["port"])
+	}
+}
+
 func TestAddDownloadClient(t *testing.T) {
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("expected POST, got %s", r.Method)
-		}
-		if r.URL.Path != "/api/v3/downloadclient" {
-			t.Errorf("unexpected path: %s", r.URL.Path)
-		}
-		if r.Header.Get("X-Api-Key") != "test-api-key" {
-			t.Errorf("expected X-Api-Key=test-api-key, got %s", r.Header.Get("X-Api-Key"))
-		}
-
-		var cfg DownloadClientConfig
-		json.NewDecoder(r.Body).Decode(&cfg)
-		if cfg.Name != "Transmission" {
-			t.Errorf("expected name Transmission, got %s", cfg.Name)
-		}
-		if cfg.Implementation != "Transmission" {
-			t.Errorf("expected implementation Transmission, got %s", cfg.Implementation)
-		}
-		if cfg.ConfigContract != "TransmissionSettings" {
-			t.Errorf("expected config contract TransmissionSettings, got %s", cfg.ConfigContract)
-		}
-		if !cfg.Enable {
-			t.Error("expected enable=true")
-		}
-		if cfg.Protocol != "torrent" {
-			t.Errorf("expected protocol torrent, got %s", cfg.Protocol)
-		}
-		if cfg.Priority != 1 {
-			t.Errorf("expected priority 1, got %d", cfg.Priority)
-		}
-		if len(cfg.Fields) != 2 {
-			t.Errorf("expected 2 fields, got %d", len(cfg.Fields))
-		}
-
+		assertDownloadClientRequest(t, r)
 		w.WriteHeader(http.StatusCreated)
 	}))
 

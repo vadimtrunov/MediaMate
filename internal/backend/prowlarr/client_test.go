@@ -18,11 +18,11 @@ func newTestClient(t *testing.T, handler http.Handler) *Client {
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	return &Client{
 		baseURL: server.URL,
 		apiKey:  "test-api-key",
-		http:    httpclient.New(httpclient.DefaultConfig(), slog.New(slog.NewTextHandler(io.Discard, nil))),
-		logger:  slog.New(slog.NewTextHandler(io.Discard, nil)),
+		http:    httpclient.New(httpclient.DefaultConfig(), logger),
 	}
 }
 
@@ -39,7 +39,9 @@ func TestAddApplication(t *testing.T) {
 		}
 
 		var app Application
-		json.NewDecoder(r.Body).Decode(&app)
+		if err := json.NewDecoder(r.Body).Decode(&app); err != nil {
+			t.Fatalf("failed to decode request body: %v", err)
+		}
 		if app.Name != "Radarr" {
 			t.Errorf("expected name Radarr, got %s", app.Name)
 		}
@@ -137,7 +139,9 @@ func TestAddDownloadClient(t *testing.T) {
 		}
 
 		var dc DownloadClient
-		json.NewDecoder(r.Body).Decode(&dc)
+		if err := json.NewDecoder(r.Body).Decode(&dc); err != nil {
+			t.Fatalf("failed to decode request body: %v", err)
+		}
 		if dc.Name != "Transmission" {
 			t.Errorf("expected name Transmission, got %s", dc.Name)
 		}
@@ -235,7 +239,9 @@ func TestAddIndexerProxy(t *testing.T) {
 		}
 
 		var proxy IndexerProxy
-		json.NewDecoder(r.Body).Decode(&proxy)
+		if err := json.NewDecoder(r.Body).Decode(&proxy); err != nil {
+			t.Fatalf("failed to decode request body: %v", err)
+		}
 		if proxy.Name != "FlareSolverr" {
 			t.Errorf("expected name FlareSolverr, got %s", proxy.Name)
 		}
@@ -313,7 +319,7 @@ func TestListIndexerProxies(t *testing.T) {
 	}
 }
 
-func TestErrorHandling(t *testing.T) {
+func TestErrorHandlingGET(t *testing.T) {
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"message": "not found"}`))
@@ -325,5 +331,20 @@ func TestErrorHandling(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "404") {
 		t.Errorf("error should mention 404: %v", err)
+	}
+}
+
+func TestErrorHandlingPOST(t *testing.T) {
+	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": "internal server error"}`))
+	}))
+
+	err := client.AddApplication(context.Background(), Application{Name: "Test"})
+	if err == nil {
+		t.Fatal("expected error for 500")
+	}
+	if !strings.Contains(err.Error(), "500") {
+		t.Errorf("error should mention 500: %v", err)
 	}
 }

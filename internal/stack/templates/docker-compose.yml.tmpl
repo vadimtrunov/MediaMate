@@ -110,7 +110,7 @@ services:
       - "8191:8191"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8191/health || exit 1"]
+      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8191/health); [ \"$code\" -lt 500 ]"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -319,7 +319,7 @@ services:
     restart: unless-stopped
     networks:
       - mediamate
-{{- if or .HasRadarr .HasSonarr .HasReadarr .HasProwlarr .HasQBittorrent .HasTransmission .HasDeluge .HasJellyfin .HasPlex .HasGluetun}}
+{{- if or .HasRadarr .HasSonarr .HasReadarr .HasProwlarr .HasFlareSolverr .HasQBittorrent .HasTransmission .HasDeluge .HasJellyfin .HasPlex .HasGluetun}}
     depends_on:
 {{- if .HasRadarr}}
       radarr:
@@ -335,6 +335,10 @@ services:
 {{- end}}
 {{- if .HasProwlarr}}
       prowlarr:
+        condition: service_healthy
+{{- end}}
+{{- if .HasFlareSolverr}}
+      flaresolverr:
         condition: service_healthy
 {{- end}}
 {{- if .HasQBittorrent}}

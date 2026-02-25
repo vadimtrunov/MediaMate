@@ -38,10 +38,10 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 **Files:**
 - Modify: `internal/config/config.go`
 
-- [ ] In `setDefaults()` (line 444): change `Interval == 0` to `Interval <= 0` so negative values also get the 15s default
-- [ ] In `validateOptionalServices()`: add validation `if c.Webhook.Progress.Enabled && c.Webhook.Progress.Interval <= 0` returning an error (this catches post-setDefaults edge cases)
-- [ ] Write test: negative interval in config triggers validation error (or gets defaulted)
-- [ ] Run project test suite — must pass before task 3
+- [x] In `setDefaults()` (line 444): change `Interval == 0` to `Interval <= 0` so negative values also get the 15s default
+- [x] In `validateOptionalServices()`: add validation `if c.Webhook.Progress.Enabled && c.Webhook.Progress.Interval <= 0` returning an error (this catches post-setDefaults edge cases)
+- [x] Write test: negative interval in config triggers validation error (or gets defaulted)
+- [x] Run project test suite — must pass before task 3
 
 ### Task 3: Handle "message is not modified" in telegram/bot.go
 

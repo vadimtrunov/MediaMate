@@ -85,8 +85,8 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 **Files:**
 - Modify: `internal/notification/service.go`
 
-- [ ] In `NotifyDownloadComplete`, when `s.tracker != nil` but `payload.DownloadID` is empty, log a warning with movie title context
-- [ ] No new tests needed (logging-only change, service tests already cover the happy path)
+- [x] In `NotifyDownloadComplete`, when `s.tracker != nil` but `payload.DownloadID` is empty, log a warning with movie title context
+- [x] No new tests needed (logging-only change, service tests already cover the happy path)
 
 ### Task 7: Improve test coverage in progress_test.go
 

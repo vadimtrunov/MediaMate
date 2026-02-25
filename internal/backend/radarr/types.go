@@ -73,3 +73,18 @@ type DownloadClientField struct {
 	Name  string `json:"name"`
 	Value any    `json:"value"`
 }
+
+// NotificationConfig represents a notification/webhook configuration in Radarr.
+type NotificationConfig struct {
+	ID                          int                   `json:"id,omitempty"`
+	Name                        string                `json:"name"`
+	Implementation              string                `json:"implementation"`
+	ConfigContract              string                `json:"configContract"`
+	OnDownload                  bool                  `json:"onDownload"`
+	OnUpgrade                   bool                  `json:"onUpgrade"`
+	OnGrab                      bool                  `json:"onGrab"`
+	OnMovieFileDelete           bool                  `json:"onMovieFileDelete"`
+	OnMovieFileDeleteForUpgrade bool                  `json:"onMovieFileDeleteForUpgrade"`
+	OnHealthIssue               bool                  `json:"onHealthIssue"`
+	Fields                      []DownloadClientField `json:"fields"`
+}

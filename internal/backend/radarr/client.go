@@ -210,6 +210,23 @@ func (c *Client) ListDownloadClients(ctx context.Context) ([]DownloadClientConfi
 	return clients, nil
 }
 
+// ListNotifications returns all notification/webhook configurations in Radarr.
+func (c *Client) ListNotifications(ctx context.Context) ([]NotificationConfig, error) {
+	var notifications []NotificationConfig
+	if err := c.get(ctx, "/api/v3/notification", nil, &notifications); err != nil {
+		return nil, fmt.Errorf("radarr list notifications: %w", err)
+	}
+	return notifications, nil
+}
+
+// AddNotification adds a notification/webhook configuration to Radarr.
+func (c *Client) AddNotification(ctx context.Context, cfg NotificationConfig) error {
+	if err := c.post(ctx, "/api/v3/notification", cfg, nil); err != nil {
+		return fmt.Errorf("radarr add notification: %w", err)
+	}
+	return nil
+}
+
 // get performs an authenticated GET request to the Radarr API and decodes the JSON response.
 func (c *Client) get(ctx context.Context, path string, params url.Values, result any) error {
 	u, err := url.Parse(c.baseURL + path)

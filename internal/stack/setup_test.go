@@ -880,6 +880,175 @@ func TestProwlarrSetupAPIError(t *testing.T) {
 // 11. TestQBittorrentSetupError — verify qBittorrent error paths
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// 12. TestRadarrAddWebhook — webhook registration tests
+// ---------------------------------------------------------------------------
+
+func newWebhookRadarrServer(
+	t *testing.T,
+	existing []radarr.NotificationConfig,
+) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var postCalls atomic.Int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v3/notification":
+			json.NewEncoder(w).Encode(existing)
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v3/notification":
+			postCalls.Add(1)
+			w.WriteHeader(http.StatusCreated)
+		default:
+			t.Errorf("webhook mock: unexpected %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return srv, &postCalls
+}
+
+func TestRadarrAddWebhook_New(t *testing.T) {
+	ctx := context.Background()
+	var receivedBody []byte
+	var postCalls atomic.Int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v3/notification":
+			json.NewEncoder(w).Encode([]radarr.NotificationConfig{})
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v3/notification":
+			postCalls.Add(1)
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				t.Errorf("read request body: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			receivedBody = body
+			w.WriteHeader(http.StatusCreated)
+		default:
+			t.Errorf("webhook mock: unexpected %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	sr := NewSetupRunner(
+		&Config{Components: []string{ComponentRadarr, ComponentMediaMate}},
+		&GenerateResult{},
+		discardLogger(),
+	)
+
+	client := radarr.New(srv.URL, "key", "", "", discardLogger())
+	results := sr.radarrAddWebhook(ctx, client)
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if !results[0].OK {
+		t.Errorf("expected OK, got error: %s", results[0].Error)
+	}
+	if postCalls.Load() != 1 {
+		t.Errorf("expected 1 POST, got %d", postCalls.Load())
+	}
+	if body := string(receivedBody); !strings.Contains(body, ":8080/webhooks/radarr") {
+		t.Errorf("expected default port 8080 in webhook URL, got: %s", body)
+	}
+}
+
+func TestRadarrAddWebhook_AlreadyExists(t *testing.T) {
+	ctx := context.Background()
+	existing := []radarr.NotificationConfig{
+		{ID: 1, Name: "MediaMate", Implementation: "Webhook"},
+	}
+	srv, postCalls := newWebhookRadarrServer(t, existing)
+	sr := NewSetupRunner(
+		&Config{Components: []string{ComponentRadarr, ComponentMediaMate}},
+		&GenerateResult{},
+		discardLogger(),
+	)
+
+	client := radarr.New(srv.URL, "key", "", "", discardLogger())
+	results := sr.radarrAddWebhook(ctx, client)
+
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if !results[0].OK {
+		t.Errorf("expected OK (skipped), got error: %s", results[0].Error)
+	}
+	if postCalls.Load() != 0 {
+		t.Errorf("expected 0 POST calls (skipped), got %d", postCalls.Load())
+	}
+}
+
+func TestRadarrAddWebhook_ListError(t *testing.T) {
+	ctx := context.Background()
+	srv := newErrorServer(t)
+	sr := NewSetupRunner(
+		&Config{Components: []string{ComponentRadarr, ComponentMediaMate}},
+		&GenerateResult{},
+		discardLogger(),
+	)
+
+	client := radarr.New(srv.URL, "key", "", "", discardLogger())
+	results := sr.radarrAddWebhook(ctx, client)
+
+	assertSingleFailure(t, results)
+}
+
+func TestRadarrAddWebhook_CustomPortAndSecret(t *testing.T) {
+	ctx := context.Background()
+	var receivedBody []byte
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/api/v3/notification":
+			json.NewEncoder(w).Encode([]radarr.NotificationConfig{})
+		case r.Method == http.MethodPost && r.URL.Path == "/api/v3/notification":
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				t.Errorf("read request body: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			receivedBody = body
+			w.WriteHeader(http.StatusCreated)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	sr := NewSetupRunner(
+		&Config{
+			Components:    []string{ComponentRadarr, ComponentMediaMate},
+			WebhookPort:   9090,
+			WebhookSecret: "my-secret",
+		},
+		&GenerateResult{},
+		discardLogger(),
+	)
+
+	client := radarr.New(srv.URL, "key", "", "", discardLogger())
+	results := sr.radarrAddWebhook(ctx, client)
+
+	if len(results) != 1 || !results[0].OK {
+		t.Fatalf("expected success, got %+v", results)
+	}
+
+	body := string(receivedBody)
+	if !strings.Contains(body, ":9090/webhooks/radarr") {
+		t.Errorf("expected port 9090 in webhook URL, got: %s", body)
+	}
+	if !strings.Contains(body, "X-Webhook-Secret") {
+		t.Errorf("expected X-Webhook-Secret header, got: %s", body)
+	}
+	if !strings.Contains(body, "my-secret") {
+		t.Errorf("expected secret value in body, got: %s", body)
+	}
+}
+
 func TestQBittorrentSetupError(t *testing.T) {
 	// Server that rejects login.
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

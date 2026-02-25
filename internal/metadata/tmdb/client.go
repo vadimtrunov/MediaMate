@@ -40,6 +40,18 @@ func New(apiKey string, logger *slog.Logger) *Client {
 	}
 }
 
+// NewForTest creates a TMDb client with a custom base URL for testing.
+// Exported because it is used by cross-package tests (e.g. internal/agent).
+func NewForTest(baseURL string, logger *slog.Logger) *Client {
+	return &Client{
+		baseURL: baseURL,
+		apiKey:  "test-key",
+		http:    httpclient.New(httpclient.DefaultConfig(), logger),
+		cache:   newCache(cacheTTL),
+		logger:  logger,
+	}
+}
+
 // SearchMovies searches for movies by title. year=0 means no year filter.
 func (c *Client) SearchMovies(ctx context.Context, query string, year int) ([]Movie, error) {
 	cacheKey := fmt.Sprintf("search:%s:%d", query, year)

@@ -101,10 +101,10 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 
 ### Task 8: Verify acceptance criteria
 
-- [ ] Run full test suite: `go test ./...`
-- [ ] Run linter: `PATH="/usr/local/go/bin:/home/vadym/go/bin:$PATH" golangci-lint run`
-- [ ] Verify no function exceeds 60 lines (revive function-length)
-- [ ] Verify no line exceeds 140 chars (revive line-length-limit)
+- [x] Run full test suite: `go test ./...`
+- [x] Run linter: `PATH="/usr/local/go/bin:/home/vadym/go/bin:$PATH" golangci-lint run`
+- [x] Verify no function exceeds 60 lines (revive function-length)
+- [x] Verify no line exceeds 140 chars (revive line-length-limit)
 
 ### Task 9: Update documentation
 

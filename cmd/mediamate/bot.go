@@ -56,9 +56,10 @@ func runBot() error {
 
 	logger.Info("telegram bot starting")
 	botErr := bot.Start(ctx)
+	cancel() // Unblock webhook server goroutine waiting on ctx.
 
 	// Surface webhook error if bot exited cleanly.
-	if webhookErr := <-webhookErrCh; webhookErr != nil {
+	if webhookErr := <-webhookErrCh; webhookErr != nil && !errors.Is(webhookErr, context.Canceled) {
 		if botErr == nil {
 			return webhookErr
 		}
@@ -133,13 +134,11 @@ func initWebhookServer(
 				slog.String("error", err.Error()))
 			return srv, nil
 		}
-		if torrentClient != nil {
-			interval := time.Duration(cfg.Webhook.Progress.Interval) * time.Second
-			tracker = notification.NewTracker(
-				torrentClient, bot, cfg.Telegram.AllowedUserIDs, interval, logger,
-			)
-			svc.SetTracker(tracker)
-		}
+		interval := time.Duration(cfg.Webhook.Progress.Interval) * time.Second
+		tracker = notification.NewTracker(
+			torrentClient, bot, cfg.Telegram.AllowedUserIDs, interval, logger,
+		)
+		svc.SetTracker(tracker)
 	}
 	return srv, tracker
 }

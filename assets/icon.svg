@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#0F0D2E"/>
+
+  <!-- Chat bubble -->
+  <rect x="96" y="104" width="320" height="240" rx="48" fill="#7C3AED"/>
+  <!-- Bubble tail -->
+  <polygon points="152,344 200,344 136,400" fill="#7C3AED"/>
+
+  <!-- Play triangle -->
+  <polygon points="224,180 224,288 312,234" fill="#F59E0B"/>
+</svg>

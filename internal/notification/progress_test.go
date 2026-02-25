@@ -59,8 +59,9 @@ type mockNotifier struct {
 }
 
 type progressSentMessage struct {
-	chatID int64
-	text   string
+	chatID    int64
+	messageID int
+	text      string
 }
 
 type progressEditedMessage struct {
@@ -79,7 +80,7 @@ func (m *mockNotifier) SendProgressMessage(
 		return 0, m.sendErr
 	}
 	m.nextID++
-	m.sent = append(m.sent, progressSentMessage{chatID: chatID, text: text})
+	m.sent = append(m.sent, progressSentMessage{chatID: chatID, messageID: m.nextID, text: text})
 
 	return m.nextID, nil
 }
@@ -155,12 +156,12 @@ func TestTrackDownload(t *testing.T) {
 	}
 
 	// Verify original title is preserved.
-	tr.mu.Lock()
-	dl := tr.downloads["abc123"]
-	tr.mu.Unlock()
-
-	if dl.title != "Dune" {
-		t.Errorf("expected title 'Dune', got %q", dl.title)
+	title, _, ok := tr.GetDownloadInfo("abc123")
+	if !ok {
+		t.Fatal("expected download 'abc123' to be tracked")
+	}
+	if title != "Dune" {
+		t.Errorf("expected title 'Dune', got %q", title)
 	}
 }
 
@@ -385,8 +386,8 @@ func TestPollAndUpdate_EditsExistingMessage(t *testing.T) {
 	if edited[0].chatID != 100 {
 		t.Errorf("expected chatID 100, got %d", edited[0].chatID)
 	}
-	if edited[0].messageID != 1 {
-		t.Errorf("expected messageID 1, got %d", edited[0].messageID)
+	if edited[0].messageID != sent[0].messageID {
+		t.Errorf("expected messageID %d, got %d", sent[0].messageID, edited[0].messageID)
 	}
 }
 
@@ -460,15 +461,12 @@ func TestSyncActiveDownloads(t *testing.T) {
 		t.Fatalf("expected 1 active download (only downloading), got %d", tr.activeCount())
 	}
 
-	tr.mu.Lock()
-	dl, ok := tr.downloads["hash1"]
-	tr.mu.Unlock()
-
+	title, _, ok := tr.GetDownloadInfo("hash1")
 	if !ok {
 		t.Fatal("expected hash1 to be tracked")
 	}
-	if dl.title != "Dune" {
-		t.Errorf("expected title 'Dune', got %q", dl.title)
+	if title != "Dune" {
+		t.Errorf("expected title 'Dune', got %q", title)
 	}
 }
 
@@ -623,6 +621,91 @@ func TestSendToUser_EditFailureFallback(t *testing.T) {
 	}
 }
 
+func TestPollAndUpdate_ListError(t *testing.T) {
+	t.Parallel()
+
+	tc := &mockTorrentClient{
+		err: errors.New("connection refused"),
+		torrents: []core.Torrent{
+			{
+				Hash:     "hash1",
+				Name:     "Dune",
+				Status:   "downloading",
+				Progress: 50.0,
+			},
+		},
+	}
+	notif := &mockNotifier{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	tr.TrackDownload("hash1", "Dune", 2021)
+
+	// Should not panic despite List returning an error.
+	tr.pollAndUpdate(context.Background())
+
+	// No messages should be sent or edited.
+	if len(notif.getSent()) != 0 {
+		t.Errorf("expected 0 sent messages, got %d", len(notif.getSent()))
+	}
+	if len(notif.getEdited()) != 0 {
+		t.Errorf("expected 0 edited messages, got %d", len(notif.getEdited()))
+	}
+
+	// Tracked download should still be preserved.
+	if tr.activeCount() != 1 {
+		t.Errorf("expected 1 active download preserved, got %d", tr.activeCount())
+	}
+}
+
+func TestSendToUser_SendError(t *testing.T) {
+	t.Parallel()
+
+	notif := &mockNotifier{sendErr: errors.New("send failed")}
+	tc := &mockTorrentClient{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	// sendToUser with no existing message — SendProgressMessage will fail.
+	tr.sendToUser(context.Background(), 100, "test message")
+
+	// No message should be recorded (send failed).
+	if len(notif.getSent()) != 0 {
+		t.Errorf("expected 0 sent messages, got %d", len(notif.getSent()))
+	}
+
+	// No user progress entry should be created.
+	if tr.hasTrackedMessages() {
+		t.Error("expected no tracked messages after send failure")
+	}
+}
+
+func TestSendToUser_EditError(t *testing.T) {
+	t.Parallel()
+
+	notif := &mockNotifier{
+		editErr: errTestEdit,
+		sendErr: errors.New("fallback send also failed"),
+	}
+	tc := &mockTorrentClient{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	// Simulate an existing user message.
+	tr.mu.Lock()
+	tr.users[100] = &userProgress{messageID: 42}
+	tr.mu.Unlock()
+
+	// Edit will fail, then fallback send will also fail.
+	tr.sendToUser(context.Background(), 100, "test message")
+
+	// Original messageID should be preserved since both operations failed.
+	tr.mu.Lock()
+	msgID := tr.users[100].messageID
+	tr.mu.Unlock()
+
+	if msgID != 42 {
+		t.Errorf("expected messageID 42 preserved after double failure, got %d", msgID)
+	}
+}
+
 func TestNotifyGrab(t *testing.T) {
 	t.Parallel()
 
@@ -656,17 +739,14 @@ func TestNotifyGrab(t *testing.T) {
 		t.Fatalf("expected 1 tracked download after grab, got %d", tr.activeCount())
 	}
 
-	tr.mu.Lock()
-	dl, ok := tr.downloads["abc123hash"]
-	tr.mu.Unlock()
-
+	title, year, ok := tr.GetDownloadInfo("abc123hash")
 	if !ok {
 		t.Fatal("expected download with hash 'abc123hash' to be tracked")
 	}
-	if dl.title != "Dune" {
-		t.Errorf("expected title 'Dune', got %q", dl.title)
+	if title != "Dune" {
+		t.Errorf("expected title 'Dune', got %q", title)
 	}
-	if dl.year != 2021 {
-		t.Errorf("expected year 2021, got %d", dl.year)
+	if year != 2021 {
+		t.Errorf("expected year 2021, got %d", year)
 	}
 }

@@ -104,6 +104,18 @@ func (t *Tracker) TrackDownload(hash, title string, year int) {
 	t.logger.Info("tracking download", slog.String("hash", hash), slog.String("title", title))
 }
 
+// GetDownloadInfo returns the title, year, and existence of a tracked download.
+func (t *Tracker) GetDownloadInfo(hash string) (title string, year int, ok bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	dl, exists := t.downloads[hash]
+	if !exists {
+		return "", 0, false
+	}
+	return dl.title, dl.year, true
+}
+
 // CompleteDownload marks a download as complete and removes it from tracking.
 func (t *Tracker) CompleteDownload(hash string) {
 	t.mu.Lock()

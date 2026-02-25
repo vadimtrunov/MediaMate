@@ -93,11 +93,11 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 **Files:**
 - Modify: `internal/notification/progress_test.go`
 
-- [ ] **Captured messageID**: in `TestPollAndUpdate_EditsExistingMessage`, replace hardcoded `messageID != 1` with `sent[0]` captured ID comparison
-- [ ] **List error path test**: add `TestPollAndUpdate_ListError` — set `mockTorrentClient.err`, call `pollAndUpdate`, assert no panic, state preserved, no sends/edits
-- [ ] **Error path tests**: add `TestSendToUser_SendError` and `TestSendToUser_EditError` exercising `mockNotifier.sendErr` / `mockNotifier.editErr`, including the new edit-failure-recovery path
-- [ ] **Accessor for internals**: add `GetDownloadInfo(hash) (title string, year int, ok bool)` method on Tracker; update `TestTrackDownload`, `TestSyncActiveDownloads`, `TestNotifyGrab` to use it instead of locking `tr.mu` directly
-- [ ] Run project test suite — must pass before task 8
+- [x] **Captured messageID**: in `TestPollAndUpdate_EditsExistingMessage`, replace hardcoded `messageID != 1` with `sent[0]` captured ID comparison
+- [x] **List error path test**: add `TestPollAndUpdate_ListError` — set `mockTorrentClient.err`, call `pollAndUpdate`, assert no panic, state preserved, no sends/edits
+- [x] **Error path tests**: add `TestSendToUser_SendError` and `TestSendToUser_EditError` exercising `mockNotifier.sendErr` / `mockNotifier.editErr`, including the new edit-failure-recovery path
+- [x] **Accessor for internals**: add `GetDownloadInfo(hash) (title string, year int, ok bool)` method on Tracker; update `TestTrackDownload`, `TestSyncActiveDownloads`, `TestNotifyGrab` to use it instead of locking `tr.mu` directly
+- [x] Run project test suite — must pass before task 8
 
 ### Task 8: Verify acceptance criteria
 

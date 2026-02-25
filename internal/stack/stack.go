@@ -149,6 +149,11 @@ type Config struct {
 
 	// MediaServer is the chosen media server ("jellyfin" or "plex").
 	MediaServer string
+
+	// WebhookPort is the port for the MediaMate webhook server (default 8080).
+	WebhookPort int
+	// WebhookSecret is the shared secret for webhook authentication.
+	WebhookSecret string
 }
 
 // DefaultConfig returns a Config populated with sensible defaults
@@ -172,6 +177,7 @@ func DefaultConfig() Config {
 		OutputDir:     ".",
 		TorrentClient: ComponentQBittorrent,
 		MediaServer:   ComponentJellyfin,
+		WebhookPort:   8080,
 	}
 }
 

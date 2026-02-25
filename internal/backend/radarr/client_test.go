@@ -459,3 +459,115 @@ func TestListDownloadClients(t *testing.T) {
 		t.Errorf("expected protocol torrent, got %s", clients[0].Protocol)
 	}
 }
+
+func TestListNotifications(t *testing.T) {
+	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+		if r.URL.Path != "/api/v3/notification" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if r.Header.Get("X-Api-Key") != "test-api-key" {
+			t.Errorf("expected X-Api-Key=test-api-key, got %s", r.Header.Get("X-Api-Key"))
+		}
+		json.NewEncoder(w).Encode([]NotificationConfig{
+			{
+				ID:             1,
+				Name:           "MediaMate",
+				Implementation: "Webhook",
+				ConfigContract: "WebhookSettings",
+				OnDownload:     true,
+				OnUpgrade:      true,
+			},
+		})
+	}))
+
+	notifications, err := client.ListNotifications(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(notifications) != 1 {
+		t.Fatalf("expected 1 notification, got %d", len(notifications))
+	}
+	if notifications[0].Name != "MediaMate" {
+		t.Errorf("expected name MediaMate, got %s", notifications[0].Name)
+	}
+	if !notifications[0].OnDownload {
+		t.Error("expected onDownload=true")
+	}
+}
+
+func TestAddNotification(t *testing.T) {
+	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		if r.URL.Path != "/api/v3/notification" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if r.Header.Get("X-Api-Key") != "test-api-key" {
+			t.Errorf("expected X-Api-Key=test-api-key, got %s", r.Header.Get("X-Api-Key"))
+		}
+		var cfg NotificationConfig
+		if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
+			t.Fatalf("decode request body: %v", err)
+		}
+		if cfg.Name != "MediaMate" {
+			t.Errorf("expected name MediaMate, got %s", cfg.Name)
+		}
+		if cfg.Implementation != "Webhook" {
+			t.Errorf("expected implementation Webhook, got %s", cfg.Implementation)
+		}
+		if !cfg.OnDownload {
+			t.Error("expected onDownload=true")
+		}
+		w.WriteHeader(http.StatusCreated)
+	}))
+
+	cfg := NotificationConfig{
+		Name:           "MediaMate",
+		Implementation: "Webhook",
+		ConfigContract: "WebhookSettings",
+		OnDownload:     true,
+		OnUpgrade:      true,
+		Fields: []DownloadClientField{
+			{Name: "url", Value: "http://mediamate:8080/webhooks/radarr"},
+			{Name: "method", Value: 1},
+		},
+	}
+	err := client.AddNotification(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestListNotifications_Error(t *testing.T) {
+	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": "server error"}`))
+	}))
+
+	_, err := client.ListNotifications(context.Background())
+	if err == nil {
+		t.Fatal("expected error for 500")
+	}
+	if !strings.Contains(err.Error(), "radarr list notifications") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestAddNotification_Error(t *testing.T) {
+	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": "server error"}`))
+	}))
+
+	err := client.AddNotification(context.Background(), NotificationConfig{Name: "test"})
+	if err == nil {
+		t.Fatal("expected error for 500")
+	}
+	if !strings.Contains(err.Error(), "radarr add notification") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}

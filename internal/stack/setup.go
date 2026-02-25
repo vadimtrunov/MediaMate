@@ -2,6 +2,7 @@ package stack
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -253,12 +254,12 @@ func dockerServiceURL(component string) string {
 	return "http://" + component + ":" + port
 }
 
-// setupRadarr creates the root folder and adds a qBittorrent download client
-// to Radarr, skipping each if it already exists.
+// setupRadarr creates the root folder, adds a qBittorrent download client,
+// and registers the MediaMate webhook, skipping each if it already exists.
 func (sr *SetupRunner) setupRadarr(ctx context.Context, apiKey string) []SetupResult {
 	var results []SetupResult
-	url := serviceURL(ComponentRadarr)
-	client := radarr.New(url, apiKey, "", "", sr.logger)
+	svcURL := serviceURL(ComponentRadarr)
+	client := radarr.New(svcURL, apiKey, "", "", sr.logger)
 
 	// Create root folder.
 	results = append(results, sr.radarrCreateRootFolder(ctx, client)...)
@@ -266,6 +267,11 @@ func (sr *SetupRunner) setupRadarr(ctx context.Context, apiKey string) []SetupRe
 	// Add qBittorrent download client.
 	if sr.cfg.HasComponent(ComponentQBittorrent) {
 		results = append(results, sr.radarrAddDownloadClient(ctx, client)...)
+	}
+
+	// Register MediaMate webhook for download notifications.
+	if sr.cfg.HasComponent(ComponentMediaMate) {
+		results = append(results, sr.radarrAddWebhook(ctx, client)...)
 	}
 
 	return results
@@ -347,6 +353,67 @@ func (sr *SetupRunner) radarrAddDownloadClient(ctx context.Context, client *rada
 	}
 
 	sr.logger.Info("radarr: added download client", slog.String("name", clientName))
+	return []SetupResult{{Service: ComponentRadarr, Action: action, OK: true}}
+}
+
+// defaultWebhookPort is the default port for the MediaMate webhook server
+// used in Docker-internal URLs.
+const defaultWebhookPort = 8080
+
+// radarrAddWebhook registers the MediaMate webhook in Radarr so that
+// download-complete events trigger notifications. Skips if already exists.
+func (sr *SetupRunner) radarrAddWebhook(ctx context.Context, client *radarr.Client) []SetupResult {
+	const action = "add webhook"
+	const webhookName = "MediaMate"
+
+	existing, err := client.ListNotifications(ctx)
+	if err != nil {
+		sr.logger.Error("radarr: failed to list notifications", slog.String("error", err.Error()))
+		return []SetupResult{{Service: ComponentRadarr, Action: action, Error: err.Error()}}
+	}
+
+	for _, n := range existing {
+		if n.Name == webhookName {
+			sr.logger.Info("radarr: webhook already exists", slog.String("name", webhookName))
+			return []SetupResult{{Service: ComponentRadarr, Action: action, OK: true}}
+		}
+	}
+
+	port := sr.cfg.WebhookPort
+	if port == 0 {
+		port = defaultWebhookPort
+	}
+
+	webhookURL := fmt.Sprintf("http://%s:%d/webhooks/radarr", ComponentMediaMate, port)
+	fields := []radarr.DownloadClientField{
+		{Name: "url", Value: webhookURL},
+		{Name: "method", Value: 1},
+	}
+
+	if sr.cfg.WebhookSecret != "" {
+		fields = append(fields, radarr.DownloadClientField{
+			Name:  "headers",
+			Value: []map[string]string{{"key": "X-Webhook-Secret", "value": sr.cfg.WebhookSecret}},
+		})
+	} else {
+		sr.logger.Warn("radarr: webhook registered without a secret; set WebhookSecret to authenticate incoming events")
+	}
+
+	notifCfg := radarr.NotificationConfig{
+		Name:           webhookName,
+		Implementation: "Webhook",
+		ConfigContract: "WebhookSettings",
+		OnDownload:     true,
+		OnUpgrade:      true,
+		Fields:         fields,
+	}
+
+	if err := client.AddNotification(ctx, notifCfg); err != nil {
+		sr.logger.Error("radarr: failed to add webhook", slog.String("error", err.Error()))
+		return []SetupResult{{Service: ComponentRadarr, Action: action, Error: err.Error()}}
+	}
+
+	sr.logger.Info("radarr: added webhook", slog.String("name", webhookName), slog.String("url", webhookURL))
 	return []SetupResult{{Service: ComponentRadarr, Action: action, OK: true}}
 }
 

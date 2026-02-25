@@ -163,10 +163,13 @@ mediamate config validate   # Config validation
 
 ## Phase 5: Notifications
 
-### 5.1 Download Notifications
-- [ ] Webhook endpoint for Radarr/Sonarr events
-- [ ] Telegram notification: "Interstellar is ready to watch!"
-- [ ] Direct link to Jellyfin
+### 5.1 Download Notifications ✅
+- [x] Webhook endpoint for Radarr events
+- [x] Telegram notification: "Interstellar is ready to watch!"
+- [x] Direct link to Jellyfin
+- [x] Webhook secret validation
+- [x] Auto-register webhook in Radarr via setup wizard
+- [ ] Sonarr webhook support (→ Phase 6)
 
 ### 5.2 Download Progress
 - [ ] Progress bars for active downloads in Telegram
@@ -343,7 +346,7 @@ mediamate config validate   # Config validation
 ## Timeline
 
 - **Phases 0-4:** MVP (v0.1) — Claude + Radarr + Telegram + Jellyfin + Stack ✅
-- **Phase 5:** Notifications — download complete → Telegram alert
+- **Phase 5.1:** Download Notifications ✅ — webhook + Telegram alert
 - **Phase 6:** Sonarr & Readarr — TV shows and books
 - **Phase 7:** Polish & release (v1.0) — tests, docs, install script
 - **Phase 8-9:** Advanced features & alternative providers

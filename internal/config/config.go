@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -27,6 +28,9 @@ type Config struct {
 
 	// Frontends
 	Telegram *TelegramConfig `yaml:"telegram,omitempty"`
+
+	// Notifications
+	Webhook *WebhookConfig `yaml:"webhook,omitempty"`
 
 	// Metadata providers
 	TMDb TMDbConfig `yaml:"tmdb"`
@@ -68,6 +72,12 @@ type JellyfinConfig struct {
 type TelegramConfig struct {
 	BotToken       string  `yaml:"bot_token"`
 	AllowedUserIDs []int64 `yaml:"allowed_user_ids,omitempty"`
+}
+
+// WebhookConfig holds webhook server configuration for receiving notifications.
+type WebhookConfig struct {
+	Port   int    `yaml:"port"`
+	Secret string `json:"-" yaml:"secret"`
 }
 
 // TMDbConfig holds TMDb API configuration
@@ -130,6 +140,7 @@ func (c *Config) applyEnvOverrides() {
 	c.applyTorrentEnv()
 	c.applyMediaServerEnv()
 	c.applyFrontendsEnv()
+	c.applyWebhookEnv()
 	c.applyAppEnv()
 }
 
@@ -228,6 +239,29 @@ func (c *Config) applyFrontendsEnv() {
 			c.Telegram = &TelegramConfig{}
 		}
 		c.Telegram.BotToken = telegramToken
+	}
+}
+
+// applyWebhookEnv applies webhook environment variable overrides.
+func (c *Config) applyWebhookEnv() {
+	portStr := os.Getenv("MEDIAMATE_WEBHOOK_PORT")
+	secret := os.Getenv("MEDIAMATE_WEBHOOK_SECRET")
+	if portStr == "" && secret == "" {
+		return
+	}
+	if c.Webhook == nil {
+		c.Webhook = &WebhookConfig{}
+	}
+	if portStr != "" {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			c.Webhook.Port = -1 // triggers validation error
+		} else {
+			c.Webhook.Port = port
+		}
+	}
+	if secret != "" {
+		c.Webhook.Secret = secret
 	}
 }
 
@@ -354,6 +388,15 @@ func (c *Config) validateOptionalServices() error {
 		}
 	}
 
+	if c.Webhook != nil {
+		if c.Webhook.Port <= 0 || c.Webhook.Port > 65535 {
+			return fmt.Errorf("webhook.port must be between 1 and 65535")
+		}
+		if c.Webhook.Secret == "" {
+			return fmt.Errorf("webhook.secret is required when webhook is enabled")
+		}
+	}
+
 	return nil
 }
 
@@ -387,6 +430,9 @@ func (c *Config) validateApp() error {
 
 // setDefaults applies default values for optional configuration fields.
 func (c *Config) setDefaults() {
+	if c.Webhook != nil && c.Webhook.Port == 0 {
+		c.Webhook.Port = 8080
+	}
 	if c.App.LogLevel == "" {
 		c.App.LogLevel = "info"
 	}

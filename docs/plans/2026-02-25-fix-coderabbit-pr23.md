@@ -57,13 +57,13 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 **Files:**
 - Modify: `internal/notification/progress.go`
 
-- [ ] **Completion ordering**: move `t.removeCompleted(completed)` before `t.sendUpdates(ctx)` in `pollAndUpdate` so `buildProgressText` sees the correct active set
-- [ ] **Final update on zero active**: replace the early return when `activeCount() == 0` with a check that sends a final update if tracked user messages exist (so "Все загрузки завершены!" is delivered)
-- [ ] **Edit failure recovery**: in `sendToUser`, when `EditProgressMessage` fails, fall back to `SendProgressMessage` and update stored messageID
-- [ ] **Comment for syncActiveDownloads**: add a brief comment noting that `core.Torrent` has no year metadata, so year is intentionally zero for picked-up downloads
-- [ ] **Distinguish disappeared vs finished**: split `applyUpdates` to return separate `completed` and `disappeared` slices; update `removeCompleted` to log differently for each case
-- [ ] Write/update tests for the new behaviors
-- [ ] Run project test suite — must pass before task 5
+- [x] **Completion ordering**: move `t.removeCompleted(completed)` before `t.sendUpdates(ctx)` in `pollAndUpdate` so `buildProgressText` sees the correct active set
+- [x] **Final update on zero active**: replace the early return when `activeCount() == 0` with a check that sends a final update if tracked user messages exist (so "Все загрузки завершены!" is delivered)
+- [x] **Edit failure recovery**: in `sendToUser`, when `EditProgressMessage` fails, fall back to `SendProgressMessage` and update stored messageID
+- [x] **Comment for syncActiveDownloads**: add a brief comment noting that `core.Torrent` has no year metadata, so year is intentionally zero for picked-up downloads
+- [x] **Distinguish disappeared vs finished**: split `applyUpdates` to return separate `completed` and `disappeared` slices; update `removeCompleted` to log differently for each case
+- [x] Write/update tests for the new behaviors
+- [x] Run project test suite — must pass before task 5
 
 ### Task 5: Move ProgressNotifier interface out of core
 

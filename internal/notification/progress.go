@@ -420,8 +420,11 @@ func formatSpeed(bytesPerSec int64) string {
 }
 
 // formatETA converts seconds to a human-readable ETA string.
+// Zero or negative means unknown/infinite (e.g. qBittorrent's 8640000 sentinel mapped to 0).
 func formatETA(seconds int64) string {
 	switch {
+	case seconds <= 0:
+		return "∞"
 	case seconds < secondsPerMinute:
 		return "<1 мин"
 	case seconds < secondsPerHour:

@@ -217,8 +217,8 @@ func TestFormatETA(t *testing.T) {
 		seconds  int64
 		expected string
 	}{
-		{"zero", 0, "<1 мин"},
-		{"negative", -10, "<1 мин"},
+		{"zero", 0, "∞"},
+		{"negative", -10, "∞"},
 		{"under_minute", 30, "<1 мин"},
 		{"five_minutes", 300, "~5 мин"},
 		{"two_hours_15_min", 2*3600 + 15*60, "~2 ч 15 мин"},

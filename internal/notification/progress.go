@@ -89,7 +89,10 @@ func NewTracker(
 }
 
 // TrackDownload starts tracking a torrent download.
+// Hash is normalized to lowercase to match qBittorrent's format.
 func (t *Tracker) TrackDownload(hash, title string, year int) {
+	hash = strings.ToLower(hash)
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -106,6 +109,8 @@ func (t *Tracker) TrackDownload(hash, title string, year int) {
 
 // GetDownloadInfo returns the title, year, and existence of a tracked download.
 func (t *Tracker) GetDownloadInfo(hash string) (title string, year int, ok bool) {
+	hash = strings.ToLower(hash)
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -118,6 +123,8 @@ func (t *Tracker) GetDownloadInfo(hash string) (title string, year int, ok bool)
 
 // CompleteDownload marks a download as complete and removes it from tracking.
 func (t *Tracker) CompleteDownload(hash string) {
+	hash = strings.ToLower(hash)
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 

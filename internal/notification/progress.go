@@ -12,6 +12,15 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/core"
 )
 
+// ProgressNotifier can send and update progress messages to users.
+type ProgressNotifier interface {
+	// SendProgressMessage sends a new progress message and returns the message ID.
+	SendProgressMessage(ctx context.Context, chatID int64, text string) (int, error)
+
+	// EditProgressMessage updates an existing progress message.
+	EditProgressMessage(ctx context.Context, chatID int64, messageID int, text string) error
+}
+
 // Compile-time interface check.
 var _ ProgressTracker = (*Tracker)(nil)
 
@@ -46,7 +55,7 @@ type userProgress struct {
 // Tracker polls qBittorrent for active downloads and updates Telegram messages.
 type Tracker struct {
 	torrent  core.TorrentClient
-	notifier core.ProgressNotifier
+	notifier ProgressNotifier
 	userIDs  []int64
 	interval time.Duration
 
@@ -60,7 +69,7 @@ type Tracker struct {
 // NewTracker creates a new progress tracker.
 func NewTracker(
 	torrent core.TorrentClient,
-	notifier core.ProgressNotifier,
+	notifier ProgressNotifier,
 	userIDs []int64,
 	interval time.Duration,
 	logger *slog.Logger,

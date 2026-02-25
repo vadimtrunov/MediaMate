@@ -48,7 +48,7 @@ func (m *mockTorrentClient) setTorrents(torrents []core.Torrent) {
 	m.torrents = torrents
 }
 
-// mockNotifier implements core.ProgressNotifier for testing.
+// mockNotifier implements ProgressNotifier for testing.
 type mockNotifier struct {
 	mu      sync.Mutex
 	sent    []progressSentMessage
@@ -129,7 +129,7 @@ func (stubFrontend) Name() string                                     { return "
 func (stubFrontend) SendMessage(_ context.Context, _, _ string) error { return nil }
 
 func newTestTracker(
-	tc core.TorrentClient, n core.ProgressNotifier, userIDs []int64,
+	tc core.TorrentClient, n ProgressNotifier, userIDs []int64,
 ) *Tracker {
 	return NewTracker(tc, n, userIDs, time.Second, nil)
 }

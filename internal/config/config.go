@@ -403,6 +403,9 @@ func (c *Config) validateOptionalServices() error {
 		if c.Webhook.Secret == "" {
 			return fmt.Errorf("webhook.secret is required when webhook is enabled")
 		}
+		if c.Webhook.Progress.Enabled && c.Webhook.Progress.Interval <= 0 {
+			return fmt.Errorf("webhook.progress.interval must be positive when progress is enabled")
+		}
 	}
 
 	return nil
@@ -441,7 +444,7 @@ func (c *Config) setDefaults() {
 	if c.Webhook != nil && c.Webhook.Port == 0 {
 		c.Webhook.Port = 8080
 	}
-	if c.Webhook != nil && c.Webhook.Progress.Interval == 0 {
+	if c.Webhook != nil && c.Webhook.Progress.Interval <= 0 {
 		c.Webhook.Progress.Interval = 15 // default 15 seconds
 	}
 	if c.App.LogLevel == "" {

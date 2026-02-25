@@ -76,8 +76,16 @@ type TelegramConfig struct {
 
 // WebhookConfig holds webhook server configuration for receiving notifications.
 type WebhookConfig struct {
-	Port   int    `yaml:"port"`
-	Secret string `json:"-" yaml:"secret"`
+	Port     int            `yaml:"port"`
+	Secret   string         `json:"-" yaml:"secret"`
+	Progress ProgressConfig `yaml:"progress"`
+}
+
+// ProgressConfig holds download progress tracking configuration.
+type ProgressConfig struct {
+	Enabled bool `yaml:"enabled"`
+	// Interval is the polling interval in seconds for checking download progress.
+	Interval int `yaml:"interval"`
 }
 
 // TMDbConfig holds TMDb API configuration
@@ -432,6 +440,9 @@ func (c *Config) validateApp() error {
 func (c *Config) setDefaults() {
 	if c.Webhook != nil && c.Webhook.Port == 0 {
 		c.Webhook.Port = 8080
+	}
+	if c.Webhook != nil && c.Webhook.Progress.Interval == 0 {
+		c.Webhook.Progress.Interval = 15 // default 15 seconds
 	}
 	if c.App.LogLevel == "" {
 		c.App.LogLevel = "info"

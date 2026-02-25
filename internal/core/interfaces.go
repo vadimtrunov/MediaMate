@@ -80,6 +80,15 @@ type Frontend interface {
 	Name() string
 }
 
+// ProgressNotifier can send and update progress messages to users.
+type ProgressNotifier interface {
+	// SendProgressMessage sends a new progress message and returns the message ID.
+	SendProgressMessage(ctx context.Context, chatID int64, text string) (int, error)
+
+	// EditProgressMessage updates an existing progress message.
+	EditProgressMessage(ctx context.Context, chatID int64, messageID int, text string) error
+}
+
 // Message represents a chat message
 type Message struct {
 	Role         string     // "user", "assistant", "system"

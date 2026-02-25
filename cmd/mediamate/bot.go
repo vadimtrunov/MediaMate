@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -50,20 +51,8 @@ func runBot() error {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	// Start webhook server in background if configured.
-	webhookErrCh := make(chan error, 1)
-	if cfg.Webhook != nil {
-		webhookSrv := initWebhookServer(cfg, bot, logger)
-		go func() {
-			err := webhookSrv.Start(ctx)
-			if err != nil {
-				logger.Error("webhook server stopped", slog.String("error", err.Error()))
-			}
-			webhookErrCh <- err
-		}()
-	} else {
-		close(webhookErrCh)
-	}
+	// Start webhook server and progress tracker in background if configured.
+	webhookErrCh := startWebhookIfConfigured(ctx, cfg, bot, logger)
 
 	logger.Info("telegram bot starting")
 	botErr := bot.Start(ctx)
@@ -97,12 +86,60 @@ func initTelegramBot(cfg *config.Config, logger *slog.Logger) (*telegram.Bot, er
 	)
 }
 
-// initWebhookServer creates a webhook notification server.
-func initWebhookServer(cfg *config.Config, bot *telegram.Bot, logger *slog.Logger) *notification.Server {
-	mediaServer := initMediaServer(cfg, logger)
+// startWebhookIfConfigured launches the webhook server and progress tracker in the background.
+// Returns a channel that will receive the webhook server error (or be closed if webhooks are disabled).
+func startWebhookIfConfigured(
+	ctx context.Context, cfg *config.Config, bot *telegram.Bot, logger *slog.Logger,
+) <-chan error {
+	errCh := make(chan error, 1)
+	if cfg.Webhook == nil {
+		close(errCh)
+		return errCh
+	}
 
+	srv, tracker := initWebhookServer(cfg, bot, logger)
+	go func() {
+		err := srv.Start(ctx)
+		if err != nil {
+			logger.Error("webhook server stopped", slog.String("error", err.Error()))
+		}
+		errCh <- err
+	}()
+
+	if tracker != nil {
+		go func() {
+			if err := tracker.Start(ctx); err != nil && ctx.Err() == nil {
+				logger.Error("progress tracker stopped", slog.String("error", err.Error()))
+			}
+		}()
+	}
+	return errCh
+}
+
+// initWebhookServer creates a webhook notification server and an optional progress tracker.
+func initWebhookServer(
+	cfg *config.Config, bot *telegram.Bot, logger *slog.Logger,
+) (*notification.Server, *notification.Tracker) {
+	mediaServer := initMediaServer(cfg, logger)
 	svc := notification.NewService(bot, mediaServer, cfg.Telegram.AllowedUserIDs, logger)
 	handler := notification.NewWebhookHandler(svc, cfg.Webhook.Secret, logger)
+	srv := notification.NewServer(cfg.Webhook.Port, handler, logger)
 
-	return notification.NewServer(cfg.Webhook.Port, handler, logger)
+	var tracker *notification.Tracker
+	if cfg.Webhook.Progress.Enabled && cfg.QBittorrent != nil {
+		torrentClient, err := initTorrent(cfg, logger)
+		if err != nil {
+			logger.Error("failed to init torrent client for progress tracking",
+				slog.String("error", err.Error()))
+			return srv, nil
+		}
+		if torrentClient != nil {
+			interval := time.Duration(cfg.Webhook.Progress.Interval) * time.Second
+			tracker = notification.NewTracker(
+				torrentClient, bot, cfg.Telegram.AllowedUserIDs, interval, logger,
+			)
+			svc.SetTracker(tracker)
+		}
+	}
+	return srv, tracker
 }

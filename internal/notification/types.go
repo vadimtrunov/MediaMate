@@ -1,5 +1,8 @@
 package notification
 
+// EventGrab is the Radarr webhook event type for grabbed (started) downloads.
+const EventGrab = "Grab"
+
 // EventDownload is the Radarr webhook event type for completed downloads.
 const EventDownload = "Download"
 

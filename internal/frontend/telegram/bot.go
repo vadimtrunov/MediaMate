@@ -23,8 +23,11 @@ type Bot struct {
 	logger       *slog.Logger
 }
 
-// compile-time check that Bot implements core.Frontend.
-var _ core.Frontend = (*Bot)(nil)
+// compile-time checks.
+var (
+	_ core.Frontend         = (*Bot)(nil)
+	_ core.ProgressNotifier = (*Bot)(nil)
+)
 
 // New creates a new Telegram Bot.
 func New(token string, allowedUserIDs []int64, factory AgentFactory, logger *slog.Logger) (*Bot, error) {
@@ -90,6 +93,26 @@ func (b *Bot) SendMessage(_ context.Context, userID, message string) error {
 	msg := tgbotapi.NewMessage(chatID, message)
 	_, err := b.api.Send(msg)
 	return err
+}
+
+// SendProgressMessage sends a new plain-text message and returns its ID.
+func (b *Bot) SendProgressMessage(_ context.Context, chatID int64, text string) (int, error) {
+	msg := tgbotapi.NewMessage(chatID, text)
+	sent, err := b.api.Send(msg)
+	if err != nil {
+		return 0, fmt.Errorf("send progress message: %w", err)
+	}
+	return sent.MessageID, nil
+}
+
+// EditProgressMessage updates an existing message's text.
+func (b *Bot) EditProgressMessage(_ context.Context, chatID int64, messageID int, text string) error {
+	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
+	_, err := b.api.Send(edit)
+	if err != nil {
+		return fmt.Errorf("edit progress message: %w", err)
+	}
+	return nil
 }
 
 // handleUpdate dispatches an incoming Telegram update.

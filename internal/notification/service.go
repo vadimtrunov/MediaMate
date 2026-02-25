@@ -86,8 +86,14 @@ func (s *Service) NotifyDownloadComplete(ctx context.Context, payload *RadarrWeb
 		return fmt.Errorf("nil Radarr payload")
 	}
 
-	if s.tracker != nil && payload.DownloadID != "" {
-		s.tracker.CompleteDownload(payload.DownloadID)
+	if s.tracker != nil {
+		if payload.DownloadID != "" {
+			s.tracker.CompleteDownload(payload.DownloadID)
+		} else {
+			s.logger.Warn("download complete event has no downloadId, cannot update progress tracker",
+				slog.String("title", payload.MovieTitle()),
+			)
+		}
 	}
 
 	title := payload.MovieTitle()

@@ -58,13 +58,15 @@ func (h *WebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		slog.String("movie", payload.MovieTitle()),
 	)
 
-	if payload.EventType != EventDownload {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	if err := h.service.NotifyDownloadComplete(r.Context(), &payload); err != nil {
-		h.logger.Error("notification failed", slog.String("error", err.Error()))
+	switch payload.EventType {
+	case EventGrab:
+		if err := h.service.NotifyGrab(r.Context(), &payload); err != nil {
+			h.logger.Error("grab notification failed", slog.String("error", err.Error()))
+		}
+	case EventDownload:
+		if err := h.service.NotifyDownloadComplete(r.Context(), &payload); err != nil {
+			h.logger.Error("download notification failed", slog.String("error", err.Error()))
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)

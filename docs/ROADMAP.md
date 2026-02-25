@@ -171,9 +171,9 @@ mediamate config validate   # Config validation
 - [x] Auto-register webhook in Radarr via setup wizard
 - [ ] Sonarr webhook support (→ Phase 6)
 
-### 5.2 Download Progress
-- [ ] Progress bars for active downloads in Telegram
-- [ ] Periodic status updates
+### 5.2 Download Progress ✅
+- [x] Progress bars for active downloads in Telegram
+- [x] Periodic status updates
 
 **Deliverable:** End-to-end flow — request movie → get notified when ready
 
@@ -347,6 +347,7 @@ mediamate config validate   # Config validation
 
 - **Phases 0-4:** MVP (v0.1) — Claude + Radarr + Telegram + Jellyfin + Stack ✅
 - **Phase 5.1:** Download Notifications ✅ — webhook + Telegram alert
+- **Phase 5.2:** Download Progress ✅ — live progress bars in Telegram
 - **Phase 6:** Sonarr & Readarr — TV shows and books
 - **Phase 7:** Polish & release (v1.0) — tests, docs, install script
 - **Phase 8-9:** Advanced features & alternative providers

@@ -9,12 +9,21 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/core"
 )
 
+// ProgressTracker tracks download progress for active torrents.
+type ProgressTracker interface {
+	// TrackDownload starts tracking a torrent download.
+	TrackDownload(hash, title string, year int)
+	// CompleteDownload marks a download as complete and removes it from tracking.
+	CompleteDownload(hash string)
+}
+
 // Service sends notifications to users when media events occur.
 type Service struct {
 	frontend    core.Frontend
 	mediaServer core.MediaServer
 	userIDs     []int64
 	logger      *slog.Logger
+	tracker     ProgressTracker
 }
 
 // NewService creates a notification service.
@@ -39,11 +48,48 @@ func NewService(
 	}
 }
 
+// SetTracker configures the progress tracker used by grab events.
+func (s *Service) SetTracker(t ProgressTracker) {
+	s.tracker = t
+}
+
+// NotifyGrab registers a grabbed download with the progress tracker.
+func (s *Service) NotifyGrab(_ context.Context, payload *RadarrWebhookPayload) error {
+	if payload == nil {
+		return fmt.Errorf("nil Radarr payload")
+	}
+	if s.tracker == nil {
+		s.logger.Debug("grab event received but no progress tracker configured")
+		return nil
+	}
+	hash := payload.DownloadID
+	if hash == "" {
+		s.logger.Warn("grab event has no downloadId, skipping progress tracking")
+		return nil
+	}
+
+	title := payload.MovieTitle()
+	year := payload.MovieYear()
+
+	s.logger.Info("tracking new download",
+		slog.String("title", title),
+		slog.Int("year", year),
+		slog.String("hash", hash),
+	)
+	s.tracker.TrackDownload(hash, title, year)
+	return nil
+}
+
 // NotifyDownloadComplete sends a Telegram message about a downloaded movie.
 func (s *Service) NotifyDownloadComplete(ctx context.Context, payload *RadarrWebhookPayload) error {
 	if payload == nil {
 		return fmt.Errorf("nil Radarr payload")
 	}
+
+	if s.tracker != nil && payload.DownloadID != "" {
+		s.tracker.CompleteDownload(payload.DownloadID)
+	}
+
 	title := payload.MovieTitle()
 	year := payload.MovieYear()
 

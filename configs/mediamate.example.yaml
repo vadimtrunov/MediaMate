@@ -70,6 +70,14 @@ telegram:
   #   - 123456789
   #   - 987654321
 
+# Webhook & Notifications (optional)
+# webhook:
+#   port: 9876
+#   secret: "your-webhook-secret"
+#   progress:
+#     enabled: true      # Enable download progress tracking in Telegram
+#     interval: 15       # Polling interval in seconds (default: 15)
+
 # Application Settings
 app:
   # Log level: "debug", "info", "warn", "error"
@@ -98,5 +106,7 @@ app:
 # - MEDIAMATE_JELLYFIN_URL
 # - MEDIAMATE_JELLYFIN_API_KEY
 # - MEDIAMATE_TELEGRAM_BOT_TOKEN
+# - MEDIAMATE_WEBHOOK_PORT
+# - MEDIAMATE_WEBHOOK_SECRET
 # - MEDIAMATE_LOG_LEVEL
 # - MEDIAMATE_DATA_DIR

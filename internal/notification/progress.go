@@ -122,6 +122,7 @@ func (t *Tracker) Start(ctx context.Context) error {
 }
 
 // syncActiveDownloads picks up already-running downloads on startup.
+// Note: core.Torrent has no year metadata, so year is intentionally zero for picked-up downloads.
 func (t *Tracker) syncActiveDownloads(ctx context.Context) {
 	torrents, err := t.torrent.List(ctx)
 	if err != nil {
@@ -154,7 +155,16 @@ func (t *Tracker) syncActiveDownloads(ctx context.Context) {
 
 // pollAndUpdate performs a single update cycle.
 func (t *Tracker) pollAndUpdate(ctx context.Context) {
-	if t.activeCount() == 0 {
+	active := t.activeCount()
+	hasMessages := t.hasTrackedMessages()
+
+	if active == 0 && !hasMessages {
+		return
+	}
+
+	// No active downloads but user messages exist: send final "all complete" update.
+	if active == 0 && hasMessages {
+		t.sendUpdates(ctx)
 		return
 	}
 
@@ -165,12 +175,13 @@ func (t *Tracker) pollAndUpdate(ctx context.Context) {
 	}
 
 	torrentMap := buildTorrentMap(torrents)
-	changed, completed := t.applyUpdates(torrentMap)
+	changed, completed, disappeared := t.applyUpdates(torrentMap)
+
+	t.removeCompleted(completed, disappeared)
 
 	if changed {
 		t.sendUpdates(ctx)
 	}
-	t.removeCompleted(completed)
 }
 
 // activeCount returns the number of tracked downloads.
@@ -179,6 +190,14 @@ func (t *Tracker) activeCount() int {
 	defer t.mu.Unlock()
 
 	return len(t.downloads)
+}
+
+// hasTrackedMessages returns true if any user still has a tracked progress message.
+func (t *Tracker) hasTrackedMessages() bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	return len(t.users) > 0
 }
 
 // buildTorrentMap creates a lookup map from hash to torrent.
@@ -191,17 +210,25 @@ func buildTorrentMap(torrents []core.Torrent) map[string]*core.Torrent {
 }
 
 // applyUpdates checks each tracked download against fresh torrent data.
-// Returns whether any update occurred and a list of completed hashes.
-func (t *Tracker) applyUpdates(torrentMap map[string]*core.Torrent) (bool, []string) {
+// Returns whether any update occurred, completed hashes (finished), and disappeared hashes (no longer reported).
+func (t *Tracker) applyUpdates(
+	torrentMap map[string]*core.Torrent,
+) (bool, []string, []string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	changed := false
 	var completed []string
+	var disappeared []string
 
 	for hash, dl := range t.downloads {
 		tr, ok := torrentMap[hash]
-		if !ok || isFinished(tr) {
+		if !ok {
+			disappeared = append(disappeared, hash)
+			changed = true
+			continue
+		}
+		if isFinished(tr) {
 			completed = append(completed, hash)
 			changed = true
 			continue
@@ -214,7 +241,7 @@ func (t *Tracker) applyUpdates(torrentMap map[string]*core.Torrent) (bool, []str
 			changed = true
 		}
 	}
-	return changed, completed
+	return changed, completed, disappeared
 }
 
 // isFinished returns true if the torrent is done downloading.
@@ -231,17 +258,21 @@ func (t *Tracker) shouldUpdate(dl *trackedDownload, tr *core.Torrent) bool {
 	return progressDelta >= progressThreshold || dl.lastStatus != tr.Status
 }
 
-// removeCompleted deletes finished downloads from tracking.
-func (t *Tracker) removeCompleted(hashes []string) {
-	if len(hashes) == 0 {
+// removeCompleted deletes finished and disappeared downloads from tracking.
+func (t *Tracker) removeCompleted(completed, disappeared []string) {
+	if len(completed) == 0 && len(disappeared) == 0 {
 		return
 	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	for _, h := range hashes {
+	for _, h := range completed {
 		delete(t.downloads, h)
-		t.logger.Info("removed completed download", slog.String("hash", h))
+		t.logger.Info("download finished", slog.String("hash", h))
+	}
+	for _, h := range disappeared {
+		delete(t.downloads, h)
+		t.logger.Warn("download disappeared from torrent client", slog.String("hash", h))
 	}
 }
 
@@ -281,8 +312,18 @@ func (t *Tracker) sendToUser(ctx context.Context, chatID int64, text string) {
 	}
 
 	if err := t.notifier.EditProgressMessage(ctx, chatID, up.messageID, text); err != nil {
-		t.logger.Warn("failed to edit progress message",
+		t.logger.Warn("failed to edit progress message, falling back to new message",
 			slog.Int64("chat_id", chatID), slog.String("error", err.Error()))
+
+		newID, sendErr := t.notifier.SendProgressMessage(ctx, chatID, text)
+		if sendErr != nil {
+			t.logger.Error("failed to send fallback progress message",
+				slog.Int64("chat_id", chatID), slog.String("error", sendErr.Error()))
+			return
+		}
+		t.mu.Lock()
+		t.users[chatID] = &userProgress{messageID: newID}
+		t.mu.Unlock()
 	}
 }
 

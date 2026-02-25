@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/vadimtrunov/MediaMate/internal/core"
 )
+
+var errTestEdit = errors.New("edit failed")
 
 // mockTorrentClient implements core.TorrentClient for testing.
 type mockTorrentClient struct {
@@ -466,6 +469,157 @@ func TestSyncActiveDownloads(t *testing.T) {
 	}
 	if dl.title != "Dune" {
 		t.Errorf("expected title 'Dune', got %q", dl.title)
+	}
+}
+
+func TestPollAndUpdate_CompletionSendsFinishedMessage(t *testing.T) {
+	t.Parallel()
+
+	tc := &mockTorrentClient{
+		torrents: []core.Torrent{
+			{
+				Hash:          "hash1",
+				Name:          "Dune",
+				Status:        "downloading",
+				Progress:      50.0,
+				DownloadSpeed: 1024 * 1024,
+				ETA:           300,
+			},
+		},
+	}
+	notif := &mockNotifier{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	tr.TrackDownload("hash1", "Dune", 2021)
+
+	// First poll: sends progress message.
+	tr.pollAndUpdate(context.Background())
+
+	sent := notif.getSent()
+	if len(sent) != 1 {
+		t.Fatalf("expected 1 sent message, got %d", len(sent))
+	}
+
+	// Torrent finishes.
+	tc.setTorrents([]core.Torrent{
+		{Hash: "hash1", Name: "Dune", Status: "seeding", Progress: 100.0},
+	})
+
+	// Second poll: completed removed first, then sendUpdates sees empty => "Все загрузки завершены!"
+	tr.pollAndUpdate(context.Background())
+
+	// Should have edited with completion message.
+	edited := notif.getEdited()
+	if len(edited) != 1 {
+		t.Fatalf("expected 1 edited message, got %d", len(edited))
+	}
+	if !strings.Contains(edited[0].text, "Все загрузки завершены!") {
+		t.Errorf("expected completion message in edit, got: %s", edited[0].text)
+	}
+}
+
+func TestPollAndUpdate_FinalUpdateWhenZeroActive(t *testing.T) {
+	t.Parallel()
+
+	tc := &mockTorrentClient{
+		torrents: []core.Torrent{
+			{
+				Hash:     "hash1",
+				Name:     "Dune",
+				Status:   "downloading",
+				Progress: 50.0,
+			},
+		},
+	}
+	notif := &mockNotifier{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	tr.TrackDownload("hash1", "Dune", 2021)
+
+	// First poll establishes message.
+	tr.pollAndUpdate(context.Background())
+
+	// Complete externally and clear torrents.
+	tr.CompleteDownload("hash1")
+	tc.setTorrents(nil)
+
+	// activeCount is 0, but user messages still exist => should still poll and send final update.
+	tr.pollAndUpdate(context.Background())
+
+	// After final update, user messages should be cleared.
+	if tr.hasTrackedMessages() {
+		t.Error("expected user messages to be cleared after final update")
+	}
+}
+
+func TestPollAndUpdate_DisappearedDownload(t *testing.T) {
+	t.Parallel()
+
+	tc := &mockTorrentClient{
+		torrents: []core.Torrent{
+			{
+				Hash:          "hash1",
+				Name:          "Dune",
+				Status:        "downloading",
+				Progress:      50.0,
+				DownloadSpeed: 1024 * 1024,
+				ETA:           300,
+			},
+		},
+	}
+	notif := &mockNotifier{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	tr.TrackDownload("hash1", "Dune", 2021)
+
+	// First poll to establish state.
+	tr.pollAndUpdate(context.Background())
+
+	// Torrent disappears entirely from client.
+	tc.setTorrents(nil)
+
+	tr.pollAndUpdate(context.Background())
+
+	if tr.activeCount() != 0 {
+		t.Errorf("expected 0 active downloads after disappearance, got %d", tr.activeCount())
+	}
+}
+
+func TestSendToUser_EditFailureFallback(t *testing.T) {
+	t.Parallel()
+
+	notif := &mockNotifier{}
+	tc := &mockTorrentClient{}
+	tr := newTestTracker(tc, notif, []int64{100})
+
+	// Simulate an existing user message.
+	tr.mu.Lock()
+	tr.users[100] = &userProgress{messageID: 42}
+	tr.mu.Unlock()
+
+	// Set edit to fail.
+	notif.mu.Lock()
+	notif.editErr = errTestEdit
+	notif.mu.Unlock()
+
+	tr.sendToUser(context.Background(), 100, "test message")
+
+	// Edit failed, so fallback to send.
+	sent := notif.getSent()
+	if len(sent) != 1 {
+		t.Fatalf("expected 1 fallback send, got %d", len(sent))
+	}
+	if sent[0].text != "test message" {
+		t.Errorf("expected 'test message', got %q", sent[0].text)
+	}
+
+	// Message ID should be updated to the new one.
+	tr.mu.Lock()
+	newID := tr.users[100].messageID
+	tr.mu.Unlock()
+
+	if newID == 42 {
+		t.Error("expected messageID to be updated after fallback send")
 	}
 }
 

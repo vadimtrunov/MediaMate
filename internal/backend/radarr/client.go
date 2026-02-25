@@ -16,6 +16,9 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/httpclient"
 )
 
+// maxErrBodySize caps the number of bytes read from error response bodies to prevent OOM.
+const maxErrBodySize = 1 << 16 // 64 KB
+
 // Client implements core.MediaBackend for Radarr.
 type Client struct {
 	baseURL        string
@@ -127,7 +130,7 @@ func (c *Client) Type() string { return "radarr" }
 
 // resolveQualityProfileID finds the quality profile ID by name, or defaults to the first available.
 func (c *Client) resolveQualityProfileID(ctx context.Context) (int, error) {
-	var profiles []radarrQualityProfile
+	var profiles []QualityProfile
 	if err := c.get(ctx, "/api/v3/qualityprofile", nil, &profiles); err != nil {
 		return 0, err
 	}
@@ -155,7 +158,7 @@ func (c *Client) resolveRootFolder(ctx context.Context) (string, error) {
 		return c.rootFolder, nil
 	}
 
-	var folders []radarrRootFolder
+	var folders []RootFolder
 	if err := c.get(ctx, "/api/v3/rootfolder", nil, &folders); err != nil {
 		return "", err
 	}
@@ -251,7 +254,7 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("radarr API error %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -287,7 +290,7 @@ func (c *Client) post(ctx context.Context, path string, body, result any) error 
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("radarr API error %d: %s", resp.StatusCode, string(respBody))
 	}
 

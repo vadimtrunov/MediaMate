@@ -65,7 +65,7 @@ func TestAdd(t *testing.T) {
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v3/qualityprofile":
-			json.NewEncoder(w).Encode([]radarrQualityProfile{
+			json.NewEncoder(w).Encode([]QualityProfile{
 				{ID: 4, Name: "HD-1080p"},
 			})
 		case "/api/v3/movie":
@@ -186,7 +186,7 @@ func TestResolveQualityProfile(t *testing.T) {
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/v3/qualityprofile":
-			json.NewEncoder(w).Encode([]radarrQualityProfile{
+			json.NewEncoder(w).Encode([]QualityProfile{
 				{ID: 1, Name: "Any"},
 				{ID: 4, Name: "HD-1080p"},
 				{ID: 6, Name: "Ultra-HD"},
@@ -207,7 +207,7 @@ func TestResolveQualityProfile(t *testing.T) {
 
 func TestResolveRootFolderDefault(t *testing.T) {
 	client := newTestClient(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		json.NewEncoder(w).Encode([]radarrRootFolder{
+		json.NewEncoder(w).Encode([]RootFolder{
 			{ID: 1, Path: "/data/movies"},
 		})
 	}))

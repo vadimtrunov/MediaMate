@@ -254,7 +254,7 @@ func (t *Tracker) applyUpdates(
 			changed = true
 			continue
 		}
-		if t.shouldUpdate(dl, tr) {
+		if shouldUpdate(dl, tr) {
 			dl.lastProgress = tr.Progress
 			dl.lastStatus = tr.Status
 			dl.speed = tr.DownloadSpeed
@@ -271,7 +271,7 @@ func isFinished(tr *core.Torrent) bool {
 }
 
 // shouldUpdate returns true if the download changed enough to warrant an update.
-func (t *Tracker) shouldUpdate(dl *trackedDownload, tr *core.Torrent) bool {
+func shouldUpdate(dl *trackedDownload, tr *core.Torrent) bool {
 	progressDelta := tr.Progress - dl.lastProgress
 	if progressDelta < 0 {
 		progressDelta = -progressDelta

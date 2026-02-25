@@ -403,6 +403,7 @@ func (sr *SetupRunner) radarrAddWebhook(ctx context.Context, client *radarr.Clie
 		Name:           webhookName,
 		Implementation: "Webhook",
 		ConfigContract: "WebhookSettings",
+		OnGrab:         true,
 		OnDownload:     true,
 		OnUpgrade:      true,
 		Fields:         fields,

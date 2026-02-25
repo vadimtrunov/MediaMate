@@ -19,6 +19,9 @@ import (
 // etaInfinity is the qBittorrent sentinel value indicating an unknown/infinite ETA.
 const etaInfinity = 8640000
 
+// maxErrBodySize caps the number of bytes read from error response bodies to prevent OOM.
+const maxErrBodySize = 1 << 16 // 64 KB
+
 // Client implements core.TorrentClient for qBittorrent.
 type Client struct {
 	baseURL  string
@@ -162,7 +165,7 @@ func (c *Client) login(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 	if resp.StatusCode != http.StatusOK || strings.TrimSpace(string(body)) != "Ok." {
 		return fmt.Errorf("login failed: status %d, body: %s", resp.StatusCode, string(body))
 	}
@@ -242,7 +245,7 @@ func (c *Client) getJSON(ctx context.Context, path string, params url.Values, re
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("qbittorrent API error %d: %s", resp.StatusCode, string(body))
 	}
 
@@ -269,7 +272,7 @@ func (c *Client) postForm(ctx context.Context, path string, data url.Values) err
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("qbittorrent API error %d: %s", resp.StatusCode, string(respBody))
 	}
 	return nil

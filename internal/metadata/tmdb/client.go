@@ -18,6 +18,7 @@ const (
 	defaultBaseURL = "https://api.themoviedb.org/3"
 	cacheTTL       = 15 * time.Minute
 	imageBaseURL   = "https://image.tmdb.org/t/p/"
+	maxErrBodySize = 1 << 16 // 64 KB
 )
 
 // Client is a TMDb API v3 client.
@@ -169,7 +170,7 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, result
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBodySize))
 		return fmt.Errorf("tmdb API error %d: %s", resp.StatusCode, string(body))
 	}
 

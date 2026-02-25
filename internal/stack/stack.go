@@ -244,6 +244,9 @@ func LoadConfigFromCompose(dir string) (Config, error) {
 		return Config{}, fmt.Errorf("load config from compose: %w", err)
 	}
 
+	// Always include MediaMate itself so that setup steps guarded by
+	// HasComponent(ComponentMediaMate) (e.g. webhook registration) run.
+	components = append(components, ComponentMediaMate)
 	cfg.Components = components
 
 	// Derive TorrentClient and MediaServer from the component list.

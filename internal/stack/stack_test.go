@@ -297,7 +297,7 @@ func TestLoadConfigFromCompose_HappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	wantComponents := []string{"radarr", "qbittorrent", "jellyfin", "prowlarr"}
+	wantComponents := []string{"radarr", "qbittorrent", "jellyfin", "prowlarr", "mediamate"}
 	if len(cfg.Components) != len(wantComponents) {
 		t.Fatalf("Components = %v, want %v", cfg.Components, wantComponents)
 	}
@@ -305,6 +305,9 @@ func TestLoadConfigFromCompose_HappyPath(t *testing.T) {
 		if c != wantComponents[i] {
 			t.Errorf("Components[%d] = %q, want %q", i, c, wantComponents[i])
 		}
+	}
+	if !cfg.HasComponent(ComponentMediaMate) {
+		t.Error("HasComponent(mediamate) = false, want true")
 	}
 	if cfg.TorrentClient != ComponentQBittorrent {
 		t.Errorf("TorrentClient = %q, want %q", cfg.TorrentClient, ComponentQBittorrent)

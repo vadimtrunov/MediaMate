@@ -48,9 +48,9 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 **Files:**
 - Modify: `internal/frontend/telegram/bot.go`
 
-- [ ] In `EditProgressMessage`, check if error contains "message is not modified" and return nil (no-op)
-- [ ] Add `strings` import
-- [ ] No unit test needed (requires Telegram API mock; behavior is implicitly covered by progress tracker tests)
+- [x] In `EditProgressMessage`, check if error contains "message is not modified" and return nil (no-op)
+- [x] Add `strings` import
+- [x] No unit test needed (requires Telegram API mock; behavior is implicitly covered by progress tracker tests)
 
 ### Task 4: Fix progress tracking logic in progress.go
 

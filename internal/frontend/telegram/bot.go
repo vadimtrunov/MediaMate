@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
@@ -110,6 +111,9 @@ func (b *Bot) EditProgressMessage(_ context.Context, chatID int64, messageID int
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	_, err := b.api.Send(edit)
 	if err != nil {
+		if strings.Contains(err.Error(), "message is not modified") {
+			return nil
+		}
 		return fmt.Errorf("edit progress message: %w", err)
 	}
 	return nil

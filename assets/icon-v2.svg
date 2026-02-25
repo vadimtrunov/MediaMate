@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#0F0D2E"/>
+
+  <!-- Film frame -->
+  <rect x="120" y="112" width="272" height="224" rx="16" fill="#7C3AED"/>
+
+  <!-- Perforations top -->
+  <rect x="148" y="124" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="188" y="124" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="228" y="124" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="268" y="124" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="308" y="124" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="348" y="124" width="20" height="28" rx="4" fill="#0F0D2E"/>
+
+  <!-- Perforations bottom -->
+  <rect x="148" y="296" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="188" y="296" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="228" y="296" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="268" y="296" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="308" y="296" width="20" height="28" rx="4" fill="#0F0D2E"/>
+  <rect x="348" y="296" width="20" height="28" rx="4" fill="#0F0D2E"/>
+
+  <!-- Inner frame -->
+  <rect x="140" y="160" width="232" height="128" rx="8" fill="#0F0D2E"/>
+
+  <!-- Terminal prompt >_ -->
+  <!-- > chevron -->
+  <polyline points="210,200 242,224 210,248" stroke="#F59E0B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- _ underscore -->
+  <rect x="260" y="240" width="40" height="10" rx="3" fill="#F59E0B"/>
+</svg>

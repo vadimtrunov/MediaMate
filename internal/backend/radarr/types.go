@@ -32,25 +32,13 @@ type radarrAddOpts struct {
 	SearchForMovie bool `json:"searchForMovie"`
 }
 
-// radarrQualityProfile represents a Radarr quality profile.
-type radarrQualityProfile struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-// radarrRootFolder represents a Radarr root folder path.
-type radarrRootFolder struct {
-	ID   int    `json:"id"`
-	Path string `json:"path"`
-}
-
-// QualityProfile represents a Radarr quality profile (exported for setup).
+// QualityProfile represents a Radarr quality profile.
 type QualityProfile struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-// RootFolder represents a Radarr root folder (exported for setup).
+// RootFolder represents a Radarr root folder path.
 type RootFolder struct {
 	ID   int    `json:"id"`
 	Path string `json:"path"`

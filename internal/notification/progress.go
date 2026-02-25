@@ -166,18 +166,19 @@ func (t *Tracker) syncActiveDownloads(ctx context.Context) {
 		if tr.Status != "downloading" {
 			continue
 		}
-		if _, ok := t.downloads[tr.Hash]; ok {
+		hash := strings.ToLower(tr.Hash)
+		if _, ok := t.downloads[hash]; ok {
 			continue
 		}
-		t.downloads[tr.Hash] = &trackedDownload{
-			hash:         tr.Hash,
+		t.downloads[hash] = &trackedDownload{
+			hash:         hash,
 			title:        tr.Name,
 			lastProgress: tr.Progress,
 			lastStatus:   tr.Status,
 			speed:        tr.DownloadSpeed,
 			eta:          tr.ETA,
 		}
-		t.logger.Info("picked up active download", slog.String("hash", tr.Hash), slog.String("name", tr.Name))
+		t.logger.Info("picked up active download", slog.String("hash", hash), slog.String("name", tr.Name))
 	}
 }
 
@@ -232,7 +233,7 @@ func (t *Tracker) hasTrackedMessages() bool {
 func buildTorrentMap(torrents []core.Torrent) map[string]*core.Torrent {
 	m := make(map[string]*core.Torrent, len(torrents))
 	for i := range torrents {
-		m[torrents[i].Hash] = &torrents[i]
+		m[strings.ToLower(torrents[i].Hash)] = &torrents[i]
 	}
 	return m
 }

@@ -72,13 +72,13 @@ Address all CodeRabbit review findings (1 critical, 5 major, 2 minor, 7 nitpicks
 - Modify: `internal/notification/progress.go`
 - Modify: `internal/frontend/telegram/bot.go`
 
-- [ ] Define `ProgressNotifier` interface in `internal/notification/progress.go` (same signatures)
-- [ ] Update `Tracker` field type from `core.ProgressNotifier` to local `ProgressNotifier`
-- [ ] Update `NewTracker` parameter type accordingly
-- [ ] Remove `ProgressNotifier` from `internal/core/interfaces.go`
-- [ ] Remove the `core.ProgressNotifier` compile-time check from `telegram/bot.go` (compiler still enforces at call site in cmd/)
-- [ ] Verify all references compile cleanly
-- [ ] Run project test suite — must pass before task 6
+- [x] Define `ProgressNotifier` interface in `internal/notification/progress.go` (same signatures)
+- [x] Update `Tracker` field type from `core.ProgressNotifier` to local `ProgressNotifier`
+- [x] Update `NewTracker` parameter type accordingly
+- [x] Remove `ProgressNotifier` from `internal/core/interfaces.go`
+- [x] Remove the `core.ProgressNotifier` compile-time check from `telegram/bot.go` (compiler still enforces at call site in cmd/)
+- [x] Verify all references compile cleanly
+- [x] Run project test suite — must pass before task 6
 
 ### Task 6: Add warning log for missing downloadId in service.go
 

@@ -24,11 +24,8 @@ type Bot struct {
 	logger       *slog.Logger
 }
 
-// compile-time checks.
-var (
-	_ core.Frontend         = (*Bot)(nil)
-	_ core.ProgressNotifier = (*Bot)(nil)
-)
+// compile-time check.
+var _ core.Frontend = (*Bot)(nil)
 
 // New creates a new Telegram Bot.
 func New(token string, allowedUserIDs []int64, factory AgentFactory, logger *slog.Logger) (*Bot, error) {

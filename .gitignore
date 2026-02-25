@@ -67,3 +67,6 @@ gosec-results.json
 
 # Compiled binary
 /mediamate
+
+# ralphex progress logs
+.ralphex/progress/

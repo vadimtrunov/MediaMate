@@ -13,8 +13,9 @@ import (
 type ProgressTracker interface {
 	// TrackDownload starts tracking a torrent download.
 	TrackDownload(hash, title string, year int)
-	// CompleteDownload marks a download as complete and removes it from tracking.
-	CompleteDownload(hash string)
+	// CompleteDownload marks a download as complete, removes it from tracking,
+	// and triggers an immediate UI update.
+	CompleteDownload(ctx context.Context, hash string)
 }
 
 // Service sends notifications to users when media events occur.
@@ -88,7 +89,7 @@ func (s *Service) NotifyDownloadComplete(ctx context.Context, payload *RadarrWeb
 
 	if s.tracker != nil {
 		if payload.DownloadID != "" {
-			s.tracker.CompleteDownload(payload.DownloadID)
+			s.tracker.CompleteDownload(ctx, payload.DownloadID)
 		} else {
 			s.logger.Warn("download complete event has no downloadId, cannot update progress tracker",
 				slog.String("title", payload.MovieTitle()),

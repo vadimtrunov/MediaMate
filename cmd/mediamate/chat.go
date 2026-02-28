@@ -67,9 +67,16 @@ type chatResponseMsg struct {
 	err      error
 }
 
+// Chat role constants.
+const (
+	roleUser      = "user"
+	roleAssistant = "assistant"
+	roleSystem    = "system"
+)
+
 // chatEntry represents a single message in the chat history.
 type chatEntry struct {
-	role    string // "user" or "assistant" or "system"
+	role    string
 	content string
 }
 
@@ -106,7 +113,7 @@ func newChatModel(ctx context.Context, a *agent.Agent) chatModel {
 		textinput: ti,
 		spinner:   s,
 		messages: []chatEntry{
-			{role: "system", content: "MediaMate ready. Type a message to start, /reset to clear history, /quit to exit."},
+			{role: roleSystem, content: "MediaMate ready. Type a message to start, /reset to clear history, /quit to exit."},
 		},
 		histIdx: -1,
 	}
@@ -247,7 +254,7 @@ func (m *chatModel) handleEnter() (tea.Model, tea.Cmd, bool) {
 	case "/reset":
 		m.agent.Reset()
 		m.messages = []chatEntry{
-			{role: "system", content: "Conversation reset."},
+			{role: roleSystem, content: "Conversation reset."},
 		}
 		m.viewport.SetContent(m.renderMessages())
 		m.viewport.GotoBottom()
@@ -255,7 +262,7 @@ func (m *chatModel) handleEnter() (tea.Model, tea.Cmd, bool) {
 	}
 
 	m.history = append(m.history, input)
-	m.messages = append(m.messages, chatEntry{role: "user", content: input})
+	m.messages = append(m.messages, chatEntry{role: roleUser, content: input})
 	m.waiting = true
 	m.viewport.SetContent(m.renderMessages())
 	m.viewport.GotoBottom()
@@ -266,9 +273,9 @@ func (m *chatModel) handleEnter() (tea.Model, tea.Cmd, bool) {
 func (m *chatModel) handleResponse(msg chatResponseMsg) {
 	m.waiting = false
 	if msg.err != nil {
-		m.messages = append(m.messages, chatEntry{role: "system", content: "Error: " + msg.err.Error()})
+		m.messages = append(m.messages, chatEntry{role: roleSystem, content: "Error: " + msg.err.Error()})
 	} else {
-		m.messages = append(m.messages, chatEntry{role: "assistant", content: msg.response})
+		m.messages = append(m.messages, chatEntry{role: roleAssistant, content: msg.response})
 	}
 	m.viewport.SetContent(m.renderMessages())
 	m.viewport.GotoBottom()
@@ -311,12 +318,12 @@ func (m chatModel) renderMessages() string {
 	var sb strings.Builder
 	for _, msg := range m.messages {
 		switch msg.role {
-		case "user":
+		case roleUser:
 			sb.WriteString(styleUser.Render("You: "))
 			sb.WriteString(msg.content)
-		case "assistant":
+		case roleAssistant:
 			sb.WriteString(styleAssistant.Render(msg.content))
-		case "system":
+		case roleSystem:
 			sb.WriteString(styleDim.Render(msg.content))
 		}
 		sb.WriteString("\n\n")

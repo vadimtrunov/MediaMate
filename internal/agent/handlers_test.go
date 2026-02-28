@@ -59,11 +59,15 @@ func TestToolSearchMovie_Errors(t *testing.T) {
 
 	t.Run("missing_query", func(t *testing.T) {
 		t.Parallel()
-		a := newTestAgent(nil, nil, nil)
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer srv.Close()
+		tc := tmdb.NewForTest(srv.URL, testLogger())
+		a := newTestAgent(tc, nil, nil)
 		_, err := a.toolSearchMovie(context.Background(), map[string]any{})
-		// nil check happens first
-		if err == nil || !strings.Contains(err.Error(), "TMDb") {
-			t.Errorf("expected error, got %v", err)
+		if err == nil || !strings.Contains(err.Error(), "requires a 'query'") {
+			t.Errorf("expected query error, got %v", err)
 		}
 	})
 

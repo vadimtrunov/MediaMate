@@ -121,15 +121,21 @@ func (t *Tracker) GetDownloadInfo(hash string) (title string, year int, ok bool)
 	return dl.title, dl.year, true
 }
 
-// CompleteDownload marks a download as complete and removes it from tracking.
-func (t *Tracker) CompleteDownload(hash string) {
+// CompleteDownload marks a download as complete, removes it from tracking,
+// and triggers an immediate UI update so users see the change right away.
+func (t *Tracker) CompleteDownload(ctx context.Context, hash string) {
 	hash = strings.ToLower(hash)
 
 	t.mu.Lock()
-	defer t.mu.Unlock()
-
+	_, existed := t.downloads[hash]
 	delete(t.downloads, hash)
+	t.mu.Unlock()
+
 	t.logger.Info("completed download", slog.String("hash", hash))
+
+	if existed {
+		t.sendUpdates(ctx)
+	}
 }
 
 // Start runs the polling loop until ctx is canceled.

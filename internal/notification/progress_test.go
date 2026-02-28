@@ -173,14 +173,14 @@ func TestCompleteDownload(t *testing.T) {
 	tr := newTestTracker(tc, notif, []int64{100})
 
 	tr.TrackDownload("abc123", "Dune", 2021)
-	tr.CompleteDownload("abc123")
+	tr.CompleteDownload(context.Background(), "abc123")
 
 	if tr.activeCount() != 0 {
 		t.Fatalf("expected 0 tracked downloads after complete, got %d", tr.activeCount())
 	}
 
 	// Completing a non-existent hash should not panic.
-	tr.CompleteDownload("nonexistent")
+	tr.CompleteDownload(context.Background(), "nonexistent")
 }
 
 func TestFormatSpeed(t *testing.T) {
@@ -538,7 +538,7 @@ func TestPollAndUpdate_FinalUpdateWhenZeroActive(t *testing.T) {
 	tr.pollAndUpdate(context.Background())
 
 	// Complete externally and clear torrents.
-	tr.CompleteDownload("hash1")
+	tr.CompleteDownload(context.Background(), "hash1")
 	tc.setTorrents(nil)
 
 	// activeCount is 0, but user messages still exist => should still poll and send final update.

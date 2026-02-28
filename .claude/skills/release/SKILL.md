@@ -14,7 +14,7 @@ Create a new release: bump version, generate changelog, create git tag, and publ
 
 ## Flow
 
-```
+```text
 1. PREPARE  → Switch to main, pull, find latest tag
 2. CHANGELOG → Show changes since last tag
 3. BUMP     → Ask which version part to bump
@@ -113,7 +113,7 @@ If goreleaser is configured (`.goreleaser.yaml` exists), mention that goreleaser
 ## Final Output
 
 Show the user:
-```
+```text
 Release {NEW_VERSION} created!
 
 - Tag: {NEW_VERSION}

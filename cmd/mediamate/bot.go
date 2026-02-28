@@ -101,7 +101,7 @@ func startWebhookIfConfigured(
 	srv, tracker := initWebhookServer(cfg, bot, logger)
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			logger.Error("webhook server stopped", slog.String("error", err.Error()))
 		}
 		errCh <- err

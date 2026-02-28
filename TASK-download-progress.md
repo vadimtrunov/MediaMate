@@ -44,11 +44,11 @@ download-progress
 
 ## Feedback Log
 
-### Review (2025-02-25)
+### Review (2026-02-25)
 - Исправлен дублированный case в formatETA (seconds <= 0 и seconds < 60)
 - Убрана зависимость notification -> telegram; ProgressBar вынесен как локальная функция
 - Русский текст в уведомлениях оставлен (consistent с existing service.go)
 
 ---
-*Создано: 2025-02-25*
+*Создано: 2026-02-25*
 *Статус: completed*

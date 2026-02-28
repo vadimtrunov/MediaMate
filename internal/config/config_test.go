@@ -205,12 +205,12 @@ func TestSetDefaults_Webhook(t *testing.T) {
 func TestSetDefaults_ProgressInterval(t *testing.T) {
 	t.Parallel()
 
-	t.Run("negative_gets_default", func(t *testing.T) {
+	t.Run("negative_preserved", func(t *testing.T) {
 		t.Parallel()
 		cfg := Config{Webhook: &WebhookConfig{Progress: ProgressConfig{Interval: -5}}}
 		cfg.setDefaults()
-		if cfg.Webhook.Progress.Interval != 15 {
-			t.Errorf("expected default interval 15, got %d", cfg.Webhook.Progress.Interval)
+		if cfg.Webhook.Progress.Interval != -5 {
+			t.Errorf("expected negative interval preserved as -5, got %d", cfg.Webhook.Progress.Interval)
 		}
 	})
 
@@ -236,16 +236,13 @@ func TestSetDefaults_ProgressInterval(t *testing.T) {
 func TestValidate_ProgressIntervalNegative(t *testing.T) {
 	t.Parallel()
 
-	t.Run("negative_interval_defaulted_via_validate", func(t *testing.T) {
+	t.Run("negative_interval_rejected_by_validate", func(t *testing.T) {
 		t.Parallel()
 		cfg := validConfig()
 		cfg.Webhook = &WebhookConfig{Port: 8080, Secret: "s", Progress: ProgressConfig{Enabled: true, Interval: -10}}
-		// Validate calls setDefaults first, which fixes -10 -> 15, so no error
-		if err := cfg.Validate(); err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if cfg.Webhook.Progress.Interval != 15 {
-			t.Errorf("expected interval defaulted to 15, got %d", cfg.Webhook.Progress.Interval)
+		err := cfg.Validate()
+		if err == nil || !strings.Contains(err.Error(), "webhook.progress.interval must be positive") {
+			t.Fatalf("expected validation error for negative interval, got %v", err)
 		}
 	})
 }

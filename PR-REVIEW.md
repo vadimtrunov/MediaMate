@@ -7,6 +7,7 @@
 - URL: https://github.com/vadimtrunov/MediaMate/pull/22
 
 ## Automated Checks
+
 | Check | Status | Details |
 |-------|--------|---------|
 | Build | OK | Clean |

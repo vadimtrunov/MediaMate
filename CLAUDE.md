@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MediaMate — chat-based media assistant powered by LLM. Pluggable architecture: swap LLM providers (Claude/OpenAI/Ollama), media backends (Radarr/Sonarr/Readarr), torrent clients (qBittorrent/Transmission/Deluge), streaming servers (Jellyfin/Plex), and frontends (Telegram/CLI). Self-hosted, Docker-first, ARM64-first (Raspberry Pi 5 target).
 
-**Status:** Early-stage — infrastructure (CI/CD, linting, release automation) is set up, but no Go source code exists yet. Phase 0 (foundation) is next.
+**Status:** Active development — infrastructure (CI/CD, linting, release automation) and core Go implementation are in place (config, LLM, media backends, torrent, notifications, Telegram bot). Currently in Phase 5 (download progress tracking).
 
 ## Build & Development Commands
 

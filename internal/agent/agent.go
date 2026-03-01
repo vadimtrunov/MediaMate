@@ -139,6 +139,11 @@ func (a *Agent) executeTool(ctx context.Context, call core.ToolCall) (string, er
 	}
 }
 
+// Close releases resources held by the agent's LLM provider.
+func (a *Agent) Close() error {
+	return a.llm.Close()
+}
+
 // Reset clears the conversation history.
 func (a *Agent) Reset() {
 	a.history = []core.Message{

@@ -124,10 +124,16 @@ func (c *Client) Chat(ctx context.Context, messages []core.Message, _ []core.Too
 }
 
 // Close removes the temporary MCP config file.
+// It is safe to call multiple times.
 func (c *Client) Close() error {
-	if c.mcpConfig != "" {
-		return os.Remove(c.mcpConfig)
+	if c.mcpConfig == "" {
+		return nil
 	}
+	err := os.Remove(c.mcpConfig)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	c.mcpConfig = ""
 	return nil
 }
 

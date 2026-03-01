@@ -43,6 +43,7 @@ func runChat() error {
 	if err != nil {
 		return err
 	}
+	defer func() { _ = a.Close() }()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()

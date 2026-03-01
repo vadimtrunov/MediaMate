@@ -106,6 +106,9 @@ func (c *Client) Chat(ctx context.Context, messages []core.Message, tools []core
 // Name returns "claude".
 func (c *Client) Name() string { return "claude" }
 
+// Close is a no-op for the Claude API client.
+func (c *Client) Close() error { return nil }
+
 // buildRequest constructs a Claude API request from core messages and tools.
 func (c *Client) buildRequest(messages []core.Message, tools []core.Tool) *request {
 	system, apiMsgs := convertMessages(messages)

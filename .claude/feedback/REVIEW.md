@@ -5,7 +5,8 @@
 - Always add `t.Parallel()` on subtests (unless parent uses `t.Setenv`)
 - Split test functions approaching 60-line limit proactively (revive rule)
 - Use interfaces for external service dependencies (not concrete types) — enables mocking and testability
-- Add `Close()` method when a struct creates temp files or acquires resources — callers should `defer x.Close()`
+- Add `Close()` method when a struct creates temp files or acquires resources — callers should `defer x.Close()`. If the resource is behind an interface, the interface must include `Close() error` too
+- Make `Close()` idempotent: ignore `os.ErrNotExist`, clear state to prevent double-close
 - Verify test assertions match actual YAML/config values (not just defaults)
 - Keep `NewForTest()` constructors exported when needed cross-package — standard Go pattern
 - Verify event lifecycle completeness: if there's a Start/Grab handler, there must be a matching Complete/Finish handler that cleans up state

@@ -27,6 +27,8 @@ func (m *mockLLM) Chat(_ context.Context, _ []core.Message, _ []core.Tool) (*cor
 
 func (m *mockLLM) Name() string { return "mock" }
 
+func (m *mockLLM) Close() error { return nil }
+
 // mockBackend implements core.MediaBackend for testing.
 type mockBackend struct {
 	addCalled  bool

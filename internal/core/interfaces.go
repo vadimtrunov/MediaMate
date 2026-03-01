@@ -9,6 +9,9 @@ type LLMProvider interface {
 
 	// Name returns the provider name (e.g., "claude", "openai", "ollama")
 	Name() string
+
+	// Close releases any resources held by the provider.
+	Close() error
 }
 
 // MediaBackend defines the interface for media management backends (Radarr, Sonarr, Readarr)

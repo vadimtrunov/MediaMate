@@ -12,6 +12,7 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/config"
 	"github.com/vadimtrunov/MediaMate/internal/core"
 	"github.com/vadimtrunov/MediaMate/internal/llm/claude"
+	"github.com/vadimtrunov/MediaMate/internal/llm/claudecode"
 	"github.com/vadimtrunov/MediaMate/internal/mediaserver/jellyfin"
 	"github.com/vadimtrunov/MediaMate/internal/metadata/tmdb"
 	"github.com/vadimtrunov/MediaMate/internal/torrent/qbittorrent"
@@ -66,8 +67,14 @@ func initLLM(cfg *config.Config, logger *slog.Logger) (core.LLMProvider, error) 
 	switch cfg.LLM.Provider {
 	case "claude":
 		return claude.New(cfg.LLM.APIKey, cfg.LLM.Model, cfg.LLM.BaseURL, logger), nil
+	case "claudecode":
+		client, err := claudecode.New(cfg.LLM.Model, configPath, logger)
+		if err != nil {
+			return nil, fmt.Errorf("create claudecode client: %w", err)
+		}
+		return client, nil
 	default:
-		return nil, fmt.Errorf("unsupported LLM provider: %s (only 'claude' is supported in this version)", cfg.LLM.Provider)
+		return nil, fmt.Errorf("unsupported LLM provider: %s (supported: 'claude', 'claudecode')", cfg.LLM.Provider)
 	}
 }
 

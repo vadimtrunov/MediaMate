@@ -123,6 +123,14 @@ func (c *Client) Chat(ctx context.Context, messages []core.Message, _ []core.Too
 	}, nil
 }
 
+// Close removes the temporary MCP config file.
+func (c *Client) Close() error {
+	if c.mcpConfig != "" {
+		return os.Remove(c.mcpConfig)
+	}
+	return nil
+}
+
 // Name returns the provider name.
 func (c *Client) Name() string { return "claudecode" }
 

@@ -13,9 +13,16 @@ import (
 	"github.com/vadimtrunov/MediaMate/internal/metadata/tmdb"
 )
 
+// MetadataClient defines the interface for movie metadata providers (TMDb).
+type MetadataClient interface {
+	SearchMovies(ctx context.Context, query string, year int) ([]tmdb.Movie, error)
+	GetMovie(ctx context.Context, id int) (*tmdb.MovieDetails, error)
+	GetRecommendations(ctx context.Context, movieID int) ([]tmdb.Movie, error)
+}
+
 // Deps holds backend dependencies for MCP tool handlers.
 type Deps struct {
-	TMDb        *tmdb.Client
+	TMDb        MetadataClient
 	Backend     core.MediaBackend
 	Torrent     core.TorrentClient
 	MediaServer core.MediaServer

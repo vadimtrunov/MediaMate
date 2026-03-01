@@ -10,6 +10,7 @@ import (
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/vadimtrunov/MediaMate/internal/core"
+	"github.com/vadimtrunov/MediaMate/internal/metadata/tmdb"
 )
 
 // mockBackend implements core.MediaBackend for testing.
@@ -74,6 +75,28 @@ func (m *mockMediaServer) GetLibraryItems(_ context.Context) ([]core.MediaItem, 
 }
 func (m *mockMediaServer) Name() string { return "jellyfin" }
 
+// mockTMDb implements MetadataClient for testing.
+type mockTMDb struct {
+	movies          []tmdb.Movie
+	searchErr       error
+	details         *tmdb.MovieDetails
+	detailsErr      error
+	recommendations []tmdb.Movie
+	recommendErr    error
+}
+
+func (m *mockTMDb) SearchMovies(_ context.Context, _ string, _ int) ([]tmdb.Movie, error) {
+	return m.movies, m.searchErr
+}
+
+func (m *mockTMDb) GetMovie(_ context.Context, _ int) (*tmdb.MovieDetails, error) {
+	return m.details, m.detailsErr
+}
+
+func (m *mockTMDb) GetRecommendations(_ context.Context, _ int) ([]tmdb.Movie, error) {
+	return m.recommendations, m.recommendErr
+}
+
 var discardLogger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 func callTool(t *testing.T, srv *Server, toolName string, args map[string]any) *mcpsdk.CallToolResult {
@@ -104,6 +127,7 @@ func callTool(t *testing.T, srv *Server, toolName string, args map[string]any) *
 }
 
 func TestListDownloads(t *testing.T) {
+	t.Parallel()
 	torrents := []core.Torrent{
 		{Hash: "abc123", Name: "Movie.2024", Progress: 50.5, Status: "downloading"},
 	}
@@ -134,6 +158,7 @@ func TestListDownloads(t *testing.T) {
 }
 
 func TestCheckAvailability(t *testing.T) {
+	t.Parallel()
 	srv := NewServer(Deps{
 		MediaServer: &mockMediaServer{available: true},
 	}, discardLogger)
@@ -158,6 +183,7 @@ func TestCheckAvailability(t *testing.T) {
 }
 
 func TestGetWatchLink(t *testing.T) {
+	t.Parallel()
 	srv := NewServer(Deps{
 		MediaServer: &mockMediaServer{link: "http://jellyfin/movie/123"},
 	}, discardLogger)
@@ -179,6 +205,7 @@ func TestGetWatchLink(t *testing.T) {
 }
 
 func TestDownloadMovie(t *testing.T) {
+	t.Parallel()
 	backend := &mockBackend{}
 	srv := NewServer(Deps{Backend: backend}, discardLogger)
 
@@ -199,6 +226,7 @@ func TestDownloadMovie(t *testing.T) {
 }
 
 func TestGetDownloadStatus(t *testing.T) {
+	t.Parallel()
 	backend := &mockBackend{
 		status: &core.MediaStatus{
 			ItemID: "123",
@@ -223,13 +251,89 @@ func TestGetDownloadStatus(t *testing.T) {
 	}
 }
 
+func TestSearchMovie(t *testing.T) {
+	t.Parallel()
+	srv := NewServer(Deps{
+		TMDb: &mockTMDb{movies: []tmdb.Movie{
+			{ID: 27205, Title: "Inception", VoteAverage: 8.4},
+		}},
+	}, discardLogger)
+
+	result := callTool(t, srv, "search_movie", map[string]any{"query": "Inception"})
+
+	if result.IsError {
+		t.Fatal("expected success, got error")
+	}
+	text := result.Content[0].(*mcpsdk.TextContent)
+
+	var got []tmdb.Movie
+	if err := json.Unmarshal([]byte(text.Text), &got); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(got) != 1 || got[0].ID != 27205 {
+		t.Errorf("unexpected result: %+v", got)
+	}
+}
+
+func TestGetMovieDetails(t *testing.T) {
+	t.Parallel()
+	srv := NewServer(Deps{
+		TMDb: &mockTMDb{details: &tmdb.MovieDetails{
+			ID: 27205, Title: "Inception", Runtime: 148,
+		}},
+	}, discardLogger)
+
+	result := callTool(t, srv, "get_movie_details", map[string]any{"tmdb_id": 27205})
+
+	if result.IsError {
+		t.Fatal("expected success, got error")
+	}
+	text := result.Content[0].(*mcpsdk.TextContent)
+
+	var got tmdb.MovieDetails
+	if err := json.Unmarshal([]byte(text.Text), &got); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if got.Runtime != 148 {
+		t.Errorf("expected runtime 148, got %d", got.Runtime)
+	}
+}
+
+func TestRecommendSimilar(t *testing.T) {
+	t.Parallel()
+	srv := NewServer(Deps{
+		TMDb: &mockTMDb{recommendations: []tmdb.Movie{
+			{ID: 155, Title: "The Dark Knight"},
+		}},
+	}, discardLogger)
+
+	result := callTool(t, srv, "recommend_similar", map[string]any{"tmdb_id": 27205})
+
+	if result.IsError {
+		t.Fatal("expected success, got error")
+	}
+	text := result.Content[0].(*mcpsdk.TextContent)
+
+	var got []tmdb.Movie
+	if err := json.Unmarshal([]byte(text.Text), &got); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(got) != 1 || got[0].Title != "The Dark Knight" {
+		t.Errorf("unexpected result: %+v", got)
+	}
+}
+
 func TestToolError_NilDependency(t *testing.T) {
+	t.Parallel()
 	srv := NewServer(Deps{}, discardLogger)
 
 	tests := []struct {
 		tool string
 		args map[string]any
 	}{
+		{"search_movie", map[string]any{"query": "Test"}},
+		{"get_movie_details", map[string]any{"tmdb_id": 1}},
+		{"recommend_similar", map[string]any{"tmdb_id": 1}},
 		{"list_downloads", map[string]any{}},
 		{"check_availability", map[string]any{"title": "Test"}},
 		{"get_watch_link", map[string]any{"title": "Test"}},
@@ -239,6 +343,7 @@ func TestToolError_NilDependency(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.tool, func(t *testing.T) {
+			t.Parallel()
 			result := callTool(t, srv, tt.tool, tt.args)
 			if !result.IsError {
 				t.Errorf("expected error for %s with nil dependency", tt.tool)
@@ -248,6 +353,7 @@ func TestToolError_NilDependency(t *testing.T) {
 }
 
 func TestToolError_MissingArgs(t *testing.T) {
+	t.Parallel()
 	srv := NewServer(Deps{
 		MediaServer: &mockMediaServer{},
 	}, discardLogger)

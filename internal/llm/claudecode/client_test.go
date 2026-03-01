@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/vadimtrunov/MediaMate/internal/core"
@@ -28,6 +29,7 @@ func newTestClient(response claudeResponse) *Client {
 }
 
 func TestChat_SimpleResponse(t *testing.T) {
+	t.Parallel()
 	client := newTestClient(claudeResponse{
 		Type:    "result",
 		Subtype: "success",
@@ -53,6 +55,7 @@ func TestChat_SimpleResponse(t *testing.T) {
 }
 
 func TestChat_ErrorResponse(t *testing.T) {
+	t.Parallel()
 	client := newTestClient(claudeResponse{
 		Type:    "result",
 		Subtype: "error",
@@ -70,6 +73,7 @@ func TestChat_ErrorResponse(t *testing.T) {
 }
 
 func TestChat_NoMessages(t *testing.T) {
+	t.Parallel()
 	client := newTestClient(claudeResponse{})
 
 	_, err := client.Chat(context.Background(), []core.Message{
@@ -82,6 +86,7 @@ func TestChat_NoMessages(t *testing.T) {
 }
 
 func TestChat_CLIFailure(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cliPath:   "false", // always exits with code 1
 		mcpConfig: "/tmp/test.json",
@@ -101,6 +106,7 @@ func TestChat_CLIFailure(t *testing.T) {
 }
 
 func TestChat_WithModel(t *testing.T) {
+	t.Parallel()
 	var capturedArgs []string
 	client := &Client{
 		cliPath:   "claude",
@@ -134,7 +140,8 @@ func TestChat_WithModel(t *testing.T) {
 	}
 }
 
-func TestChat_ConversationHistory(t *testing.T) {
+func chatWithHistory(t *testing.T) []string {
+	t.Helper()
 	var capturedArgs []string
 	client := &Client{
 		cliPath:   "claude",
@@ -157,36 +164,40 @@ func TestChat_ConversationHistory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	return capturedArgs
+}
 
-	// First arg should be -p, second should be the prompt
+func TestChat_PromptContainsHistory(t *testing.T) {
+	t.Parallel()
+	capturedArgs := chatWithHistory(t)
+
 	if len(capturedArgs) < 2 || capturedArgs[0] != "-p" {
 		t.Fatalf("expected -p flag, got %v", capturedArgs)
 	}
 	prompt := capturedArgs[1]
 
-	if prompt == "" {
-		t.Fatal("expected non-empty prompt")
-	}
-	// Prompt should contain conversation history
-	if !contains(prompt, "Find inception") {
+	if !strings.Contains(prompt, "Find inception") {
 		t.Error("prompt missing first user message")
 	}
-	if !contains(prompt, "I found Inception") {
+	if !strings.Contains(prompt, "I found Inception") {
 		t.Error("prompt missing assistant response")
 	}
-	if !contains(prompt, "Download it") {
+	if !strings.Contains(prompt, "Download it") {
 		t.Error("prompt missing second user message")
 	}
-	// System message should NOT be in the prompt
-	if contains(prompt, "You are MediaMate") {
+	if strings.Contains(prompt, "You are MediaMate") {
 		t.Error("system message should not be in prompt (sent via --append-system-prompt)")
 	}
+}
 
-	// Check system prompt is passed via --append-system-prompt
+func TestChat_SystemPromptFlag(t *testing.T) {
+	t.Parallel()
+	capturedArgs := chatWithHistory(t)
+
 	foundSystem := false
 	for i, arg := range capturedArgs {
 		if arg == "--append-system-prompt" && i+1 < len(capturedArgs) {
-			if contains(capturedArgs[i+1], "You are MediaMate") {
+			if strings.Contains(capturedArgs[i+1], "You are MediaMate") {
 				foundSystem = true
 			}
 			break
@@ -198,6 +209,7 @@ func TestChat_ConversationHistory(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
+	t.Parallel()
 	c := &Client{}
 	if c.Name() != "claudecode" {
 		t.Errorf("expected claudecode, got %s", c.Name())
@@ -205,6 +217,7 @@ func TestName(t *testing.T) {
 }
 
 func TestBuildPrompt(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		messages []core.Message
@@ -256,6 +269,7 @@ func TestBuildPrompt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := buildPrompt(tt.messages)
 			if got != tt.want {
 				t.Errorf("buildPrompt() = %q, want %q", got, tt.want)
@@ -265,6 +279,7 @@ func TestBuildPrompt(t *testing.T) {
 }
 
 func TestExtractSystemPrompt(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		messages []core.Message
@@ -297,6 +312,7 @@ func TestExtractSystemPrompt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := extractSystemPrompt(tt.messages)
 			if got != tt.want {
 				t.Errorf("extractSystemPrompt() = %q, want %q", got, tt.want)
@@ -306,6 +322,7 @@ func TestExtractSystemPrompt(t *testing.T) {
 }
 
 func TestWriteMCPConfig(t *testing.T) {
+	t.Parallel()
 	path, err := writeMCPConfig("/usr/local/bin/mediamate", "/etc/mediamate/config.yaml")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -340,16 +357,4 @@ func TestWriteMCPConfig(t *testing.T) {
 	if args[0] != "mcp-serve" || args[1] != "-c" || args[2] != "/etc/mediamate/config.yaml" {
 		t.Errorf("unexpected args: %v", args)
 	}
-}
-
-func contains(s, substr string) bool {
-	for i := range s {
-		if i+len(substr) > len(s) {
-			break
-		}
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

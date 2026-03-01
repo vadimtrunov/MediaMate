@@ -41,7 +41,7 @@ type Config struct {
 
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
-	Provider string `yaml:"provider"` // "claude", "openai", "ollama"
+	Provider string `yaml:"provider"` // "claude", "openai", "ollama", "claudecode"
 	APIKey   string `json:"-" yaml:"api_key"`
 	Model    string `yaml:"model,omitempty"`
 	BaseURL  string `yaml:"base_url,omitempty"` // For Ollama
@@ -311,10 +311,11 @@ func (c *Config) validateLLM() error {
 	if c.LLM.Provider == "" {
 		return fmt.Errorf("llm.provider is required")
 	}
-	if c.LLM.Provider != "claude" && c.LLM.Provider != "openai" && c.LLM.Provider != "ollama" {
-		return fmt.Errorf("llm.provider must be 'claude', 'openai', or 'ollama'")
+	validProviders := map[string]bool{"claude": true, "openai": true, "ollama": true, "claudecode": true}
+	if !validProviders[c.LLM.Provider] {
+		return fmt.Errorf("llm.provider must be 'claude', 'openai', 'ollama', or 'claudecode'")
 	}
-	if c.LLM.Provider != "ollama" && c.LLM.APIKey == "" {
+	if c.LLM.Provider != "ollama" && c.LLM.Provider != "claudecode" && c.LLM.APIKey == "" {
 		return fmt.Errorf("llm.api_key is required for provider '%s'", c.LLM.Provider)
 	}
 	return nil
